@@ -276,6 +276,20 @@ const Layout = () => {
                                 Transport
                             </Link>
                             <Link 
+                                to="/student/timetable" 
+                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isActive('/student/timetable') ? 'bg-amber-50 text-amber-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                            >
+                                <CalendarDays className="w-5 h-5 text-amber-500" />
+                                Timetable
+                            </Link>
+                            <Link 
+                                to="/student/notices" 
+                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isActive('/student/notices') ? 'bg-rose-50 text-rose-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                            >
+                                <Bell className="w-5 h-5 text-rose-500" />
+                                Notice Board
+                            </Link>
+                            <Link 
                                 to="/student/settings" 
                                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isActive('/student/settings') ? 'bg-slate-200 text-slate-800' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
                             >

@@ -4,6 +4,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import Settings from './pages/Settings';
 import Layout from './components/Layout';
+import TeacherDashboard from './pages/TeacherDashboard';
 import PagePlaceholder from './pages/PagePlaceholder';
 import Users from './pages/Users';
 import RolesPermissions from './pages/RolesPermissions';
@@ -72,7 +73,11 @@ function App() {
         <Route path="/student/calendar" element={<StudentDashboard activeTab="calendar" />} />
         <Route path="/student/homework" element={<StudentDashboard activeTab="homework" />} />
         <Route path="/student/transport" element={<StudentDashboard activeTab="transport" />} />
+        <Route path="/student/timetable" element={<StudentDashboard activeTab="timetable" />} />
+        <Route path="/student/notices" element={<StudentDashboard activeTab="notices" />} />
         <Route path="/student/settings" element={<StudentDashboard activeTab="settings" />} />
+        
+        <Route path="/teacher" element={<TeacherDashboard />} />
         <Route path="/settings" element={<Settings />} />
         
         {/* Student Information Routes */}

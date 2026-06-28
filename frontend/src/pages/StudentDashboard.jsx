@@ -34,6 +34,12 @@ const dummyPaymentStatus = {
     mar: 'Upcoming'
 };
 
+const dummyNotices = [
+    { id: 1, title: 'Winter Vacation Scheduled', date: '20 Dec', desc: 'The school will remain closed for winter vacations starting from 25th Dec.', priority: 'High', type: 'Holiday' },
+    { id: 2, title: 'Half-Yearly Exams Finalized', date: '15 Oct', desc: 'Please download your exam routine from the calendar section. Practical exams start next week.', priority: 'Urgent', type: 'Academic' },
+    { id: 3, title: 'Science Fair Registration', date: '10 Oct', desc: 'Students interested in the upcoming science fair must register by this Friday.', priority: 'Normal', type: 'Event' }
+];
+
 const StudentDashboard = ({ activeTab = 'home' }) => {
     const { user } = useContext(AuthContext);
     const [newPassword, setNewPassword] = useState('');
@@ -106,13 +112,82 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                     </div>
                     <div>
                         <h1 className="text-3xl font-black tracking-tight mb-1">Student Portal</h1>
-                        <p className="text-indigo-100 font-medium">Welcome back, {user?.email || 'Student'}. You are in {user?.class || 'your class'}.</p>
+                        <div className="flex items-center gap-3 text-indigo-100 font-medium">
+                            <p>Welcome back, <span className="font-bold text-white">{user?.email || 'Student'}</span>.</p>
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-300"></span>
+                            <p>Class: <span className="font-bold text-white">{user?.class || '10th Grade'}</span></p>
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-300"></span>
+                            <div className="flex items-center gap-1.5">
+                                <span className={`w-2.5 h-2.5 rounded-full ${user?.house === 'Red' ? 'bg-red-400' : user?.house === 'Green' ? 'bg-emerald-400' : user?.house === 'Yellow' ? 'bg-yellow-400' : 'bg-blue-400'}`}></span>
+                                <span>{user?.house || 'Blue'} House</span>
+                            </div>
+                        </div>
                     </div>
-                </div>            </div>
+                </div>
+            </div>
 
             {/* Display everything on home, otherwise display specific tabs */}
             
-            {(activeTab === 'home' || activeTab === 'settings') && (
+            {(activeTab === 'home' || activeTab === 'notices') && (
+            <div className="mt-6">
+                {/* Important Notices Section */}
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+                        <Bell className="w-5 h-5 text-rose-500" />
+                        Notice Board
+                    </h2>
+                    <span className="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black uppercase tracking-widest">{dummyNotices.length} New</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {dummyNotices.map(notice => (
+                        <div key={notice.id} className="p-5 bg-white rounded-3xl border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-lg transition-shadow relative overflow-hidden group">
+                            <div className={`absolute top-0 left-0 w-1 h-full ${notice.priority === 'Urgent' ? 'bg-rose-500' : notice.priority === 'High' ? 'bg-orange-500' : 'bg-indigo-500'}`}></div>
+                            <div className="flex justify-between items-start mb-3">
+                                <span className={`px-2 py-1 text-[9px] font-black uppercase tracking-widest rounded shadow-sm ${notice.type === 'Holiday' ? 'bg-orange-50 text-orange-600' : notice.type === 'Academic' ? 'bg-fuchsia-50 text-fuchsia-600' : 'bg-sky-50 text-sky-600'}`}>{notice.type}</span>
+                                <span className="text-xs font-bold text-slate-400">{notice.date}</span>
+                            </div>
+                            <h3 className="font-bold text-slate-800 text-sm mb-2 group-hover:text-indigo-600 transition-colors">{notice.title}</h3>
+                            <p className="text-xs text-slate-500 font-medium leading-relaxed">{notice.desc}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            )}
+
+            {activeTab === 'home' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+                    <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><CheckCircle className="w-5 h-5" /></div>
+                            <h3 className="text-sm font-bold text-slate-500">Attendance</h3>
+                        </div>
+                        <p className="text-2xl font-black text-slate-800">85%</p>
+                    </div>
+                    <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-fuchsia-50 text-fuchsia-600 rounded-lg"><Award className="w-5 h-5" /></div>
+                            <h3 className="text-sm font-bold text-slate-500">Last Exam</h3>
+                        </div>
+                        <p className="text-2xl font-black text-slate-800">A1 Grade</p>
+                    </div>
+                    <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-rose-50 text-rose-600 rounded-lg"><FileSpreadsheet className="w-5 h-5" /></div>
+                            <h3 className="text-sm font-bold text-slate-500">Pending Fees</h3>
+                        </div>
+                        <p className="text-2xl font-black text-slate-800">₹2,500</p>
+                    </div>
+                    <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-teal-50 text-teal-600 rounded-lg"><Bus className="w-5 h-5" /></div>
+                            <h3 className="text-sm font-bold text-slate-500">Bus Status</h3>
+                        </div>
+                        <p className="text-2xl font-black text-slate-800">Active</p>
+                    </div>
+                </div>
+            )}
+            
+            {activeTab === 'settings' && (
                 <div className="mt-6 max-w-xl mx-auto">
                     {/* Security Settings (Change Password) */}
                     <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60">
@@ -172,7 +247,7 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                 </div>
             )}
 
-            {(activeTab === 'home' || activeTab === 'fees') && (
+            {activeTab === 'fees' && (
                 <div className="mt-6">
                     {/* Fee Structure Display */}
                     <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 overflow-hidden">
@@ -253,7 +328,7 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                 </div>
             )}
 
-            {(activeTab === 'home' || activeTab === 'attendance') && (
+            {activeTab === 'attendance' && (
             <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 mt-6">
                 {/* Attendance Overview */}
                 <div className="flex items-center gap-3 mb-6">
@@ -356,11 +431,11 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
             </div>
             )}
 
-            {(activeTab === 'home' || activeTab === 'results' || activeTab === 'calendar') && (
-            <div className={`grid grid-cols-1 ${activeTab === 'home' ? 'lg:grid-cols-2' : ''} gap-6 mt-6`}>
+            {(activeTab === 'results' || activeTab === 'calendar') && (
+            <div className={`grid grid-cols-1 gap-6 mt-6`}>
                 {/* Results and Academic Calendar Row */}
                 
-                {(activeTab === 'home' || activeTab === 'results') && (
+                {activeTab === 'results' && (
                 <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60">
                     {/* Academic Results Section */}
                     <div className="flex items-center justify-between mb-6">
@@ -436,7 +511,7 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                 </div>
                 )}
 
-                {(activeTab === 'home' || activeTab === 'calendar') && (
+                {activeTab === 'calendar' && (
                 <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60">
                     {/* Academic Calendar Section */}
                     <div className="flex items-center justify-between mb-6">
@@ -492,7 +567,7 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
             </div>
             )}
 
-            {(activeTab === 'home' || activeTab === 'homework') && (
+            {activeTab === 'homework' && (
             <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 mt-6">
                 {/* Homework Section */}
                 <div className="flex items-center justify-between mb-6">
@@ -537,7 +612,7 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
             </div>
             )}
 
-            {(activeTab === 'home' || activeTab === 'transport') && (
+            {activeTab === 'transport' && (
             <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 mt-6">
                 {/* Transport & Bus Section */}
                 <div className="flex items-center justify-between mb-6">
@@ -633,9 +708,16 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                                 <span className="absolute -top-2 -right-2 w-5 h-5 bg-rose-500 border-2 border-white rounded-full"></span>
                             </div>
                             <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-2">School Announcement!</h3>
-                            <p className="text-slate-500 font-medium text-sm mb-6">
-                                Please be informed that the school will remain closed tomorrow due to the upcoming state elections. Normal classes will resume from Monday. 
-                            </p>
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6 text-left">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="px-2 py-1 bg-rose-100 text-rose-700 text-[10px] font-black uppercase tracking-widest rounded shadow-sm">{dummyNotices[0].type}</span>
+                                    <span className="text-xs font-bold text-slate-400">{dummyNotices[0].date}</span>
+                                </div>
+                                <h4 className="font-bold text-slate-800 text-sm mb-1">{dummyNotices[0].title}</h4>
+                                <p className="text-slate-500 font-medium text-xs leading-relaxed">
+                                    {dummyNotices[0].desc}
+                                </p>
+                            </div>
                             <button 
                                 onClick={() => setShowPopup(false)}
                                 className="w-full py-3.5 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition-colors shadow-sm"
