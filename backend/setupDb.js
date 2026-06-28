@@ -19,7 +19,7 @@ async function setup() {
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 email VARCHAR(255) NOT NULL UNIQUE,
                 password VARCHAR(255) NOT NULL,
-                role ENUM('super_admin', 'admin', 'teacher', 'student') DEFAULT 'student',
+                role VARCHAR(50) DEFAULT 'student',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);

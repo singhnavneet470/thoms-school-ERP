@@ -134,6 +134,7 @@ const Layout = () => {
         { path: '/transport/vehicles', label: 'Vehicles', icon: <Truck className="w-4 h-4" /> },
         { path: '/transport/assign-vehicle', label: 'Assign Vehicle', icon: <Bus className="w-4 h-4" /> },
         { path: '/transport/route-pickup', label: 'Route Pickup Point', icon: <MapPin className="w-4 h-4" /> },
+        { path: '/transport/student-transport', label: 'Student Transport', icon: <Users className="w-4 h-4" /> },
         { path: '/transport/student-fees', label: 'Student Transport Fees', icon: <Banknote className="w-4 h-4" /> },
     ];
 
