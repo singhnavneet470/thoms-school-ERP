@@ -106,10 +106,11 @@ router.get('/attendance', [verifyToken], async (req, res) => {
 // Save student attendance in bulk
 router.post('/attendance', [verifyToken], async (req, res) => {
     const { date, attendanceData } = req.body;
+    if (!['teacher', 'admin', 'super_admin'].includes(req.user?.role)) {
+        return res.status(403).json({ error: 'Access denied' });
+    }
     try {
         if (!date || !attendanceData) {
-            return res.status(400).json({ error: 'Date and attendanceData are required' });
-        }
         for (const [userId, status] of Object.entries(attendanceData)) {
             await pool.query(
                 'INSERT INTO student_attendance (user_id, date, status) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE status = ?',
