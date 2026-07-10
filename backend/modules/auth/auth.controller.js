@@ -39,7 +39,7 @@ exports.me = async (req, res) => {
 
 exports.students = async (req, res) => {
   const pool = require('../../config/db');
-  const [rows] = await pool.query('SELECT id, email, class, section FROM users WHERE role = "student"');
+  const [rows] = await pool.query('SELECT id, email, full_name, class, section, phone, gender, status FROM users WHERE role = "student"');
   res.json(rows);
 };
 

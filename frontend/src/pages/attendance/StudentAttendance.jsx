@@ -17,14 +17,22 @@ const StudentAttendance = () => {
         fetchStudents();
     }, []);
 
+    useEffect(() => {
+        if (students.length > 0) {
+            fetchAttendance();
+        }
+    }, [date, students]);
+
     const fetchStudents = async () => {
         try {
             const response = await api.get('/auth/students');
-            const data = response.data;
+            const data = response.data.map(s => ({
+                ...s,
+                name: s.full_name || s.email.split('@')[0]
+            }));
             setStudents(data);
             setFilteredStudents(data);
             
-            // Initialize attendance data to 'Present' by default
             const initialData = {};
             data.forEach(s => {
                 initialData[s.id] = 'Present';
@@ -35,14 +43,31 @@ const StudentAttendance = () => {
         }
     };
 
+    const fetchAttendance = async () => {
+        try {
+            const response = await api.get(`/admin/attendance?date=${date}`);
+            const marked = response.data;
+            const updatedData = {};
+            students.forEach(s => {
+                updatedData[s.id] = 'Present';
+            });
+            marked.forEach(m => {
+                updatedData[m.user_id] = m.status;
+            });
+            setAttendanceData(updatedData);
+        } catch (error) {
+            console.error('Failed to fetch attendance records', error);
+        }
+    };
+
     const handleSearch = (e) => {
         e.preventDefault();
         let filtered = students;
         if (searchClass) {
-            filtered = filtered.filter(s => s.class === searchClass);
+            filtered = filtered.filter(s => s.class?.toLowerCase().includes(searchClass.toLowerCase()));
         }
         if (searchSection) {
-            filtered = filtered.filter(s => s.section === searchSection);
+            filtered = filtered.filter(s => s.section?.toLowerCase().includes(searchSection.toLowerCase()));
         }
         setFilteredStudents(filtered);
     };
@@ -51,11 +76,19 @@ const StudentAttendance = () => {
         setAttendanceData(prev => ({ ...prev, [id]: status }));
     };
 
-    const handleSaveAttendance = () => {
-        // Here you would typically send it to the backend via POST /attendance
-        console.log('Saving attendance for', date, attendanceData);
-        setNotification({ type: 'success', message: `Attendance for ${date} saved successfully!` });
-        setTimeout(() => setNotification(null), 3000);
+    const handleSaveAttendance = async () => {
+        try {
+            await api.post('/admin/attendance', {
+                date,
+                attendanceData
+            });
+            setNotification({ type: 'success', message: `Attendance for ${date} saved successfully to database!` });
+            setTimeout(() => setNotification(null), 3000);
+        } catch (error) {
+            console.error('Failed to save attendance', error);
+            setNotification({ type: 'error', message: 'Failed to save attendance records.' });
+            setTimeout(() => setNotification(null), 4000);
+        }
     };
 
     return (

@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Users, GraduationCap, Building2, Banknote, CreditCard, UserPlus, Settings, FileText, Bell, Activity, Plus } from 'lucide-react';
+import { Users, GraduationCap, Building2, Banknote, CreditCard, UserPlus, Settings, Bell, Activity, Plus, Clock, Bus, Shield, FileText } from 'lucide-react';
 
 const StatCard = ({ title, value, icon: Icon, colorClass, trend }) => (
     <div className="bg-white p-6 rounded-3xl shadow-[0_2px_20px_rgba(0,0,0,0.02)] border border-slate-100 flex items-center justify-between group hover:-translate-y-1 transition-all duration-300">
@@ -65,44 +65,81 @@ const SuperAdminDashboard = () => {
                 {/* Left Column: Quick Access & Analytics */}
                 <div className="lg:col-span-2 space-y-8">
                     
-                    {/* Quick Access Grid */}
-                    <div className="bg-white p-8 rounded-3xl shadow-[0_2px_20px_rgba(0,0,0,0.02)] border border-slate-100">
-                        <div className="flex items-center justify-between mb-6">
+                    {/* Core ERP Modules Hub */}
+                    <div className="bg-white p-8 rounded-3xl shadow-[0_2px_20px_rgba(0,0,0,0.02)] border border-slate-100 space-y-6">
+                        <div>
                             <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
-                                <Activity className="w-5 h-5 text-indigo-600" /> Quick Access
+                                <Activity className="w-5 h-5 text-indigo-600" /> ERP Workspaces
                             </h2>
+                            <p className="text-slate-500 text-xs mt-1">Select a module to run administrative operations or configure system parameters.</p>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                            <QuickAccessCard 
-                                onClick={() => navigate('/fees/collect')} 
-                                title="Collect Fees" desc="POS Terminal" 
-                                icon={CreditCard} colorClass="bg-emerald-50 text-emerald-700 hover:bg-emerald-100" 
-                            />
-                            <QuickAccessCard 
-                                onClick={() => navigate('/student/admission')} 
-                                title="Add Student" desc="New enrollment" 
-                                icon={UserPlus} colorClass="bg-blue-50 text-blue-700 hover:bg-blue-100" 
-                            />
-                            <QuickAccessCard 
-                                onClick={() => navigate('/download/upload')} 
-                                title="Upload Material" desc="Download Center" 
-                                icon={FileText} colorClass="bg-purple-50 text-purple-700 hover:bg-purple-100" 
-                            />
-                            <QuickAccessCard 
-                                onClick={() => navigate('/communicate/notice-board')} 
-                                title="Notice Board" desc="Publish alerts" 
-                                icon={Bell} colorClass="bg-amber-50 text-amber-700 hover:bg-amber-100" 
-                            />
-                            <QuickAccessCard 
-                                onClick={() => navigate('/hr/staff-directory')} 
-                                title="Staff Directory" desc="HR Management" 
-                                icon={Building2} colorClass="bg-rose-50 text-rose-700 hover:bg-rose-100" 
-                            />
-                            <QuickAccessCard 
-                                onClick={() => navigate('/settings/users')} 
-                                title="System Users" desc="Roles & Passwords" 
-                                icon={Settings} colorClass="bg-slate-100 text-slate-700 hover:bg-slate-200" 
-                            />
+                        
+                        <div className="space-y-6">
+                            {/* Academic & Students */}
+                            <div>
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Academic & Students</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                    <QuickAccessCard 
+                                        onClick={() => navigate('/student/details')} 
+                                        title="Student Directory" desc="View/Edit Profiles" 
+                                        icon={GraduationCap} colorClass="bg-indigo-50 text-indigo-700 hover:bg-indigo-100" 
+                                    />
+                                    <QuickAccessCard 
+                                        onClick={() => navigate('/student/admission')} 
+                                        title="Student Admissions" desc="Register New Student" 
+                                        icon={UserPlus} colorClass="bg-sky-50 text-sky-700 hover:bg-sky-100" 
+                                    />
+                                    <QuickAccessCard 
+                                        onClick={() => navigate('/attendance/student')} 
+                                        title="Attendance Hub" desc="Mark/Review Daily Roll" 
+                                        icon={Users} colorClass="bg-teal-50 text-teal-700 hover:bg-teal-100" 
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Operations & Finance */}
+                            <div>
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Operations & Finance</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                    <QuickAccessCard 
+                                        onClick={() => navigate('/fees/collect')} 
+                                        title="Collect Fees" desc="POS Terminal & Invoices" 
+                                        icon={CreditCard} colorClass="bg-emerald-50 text-emerald-700 hover:bg-emerald-100" 
+                                    />
+                                    <QuickAccessCard 
+                                        onClick={() => navigate('/academics/class-timetable')} 
+                                        title="Timetables" desc="Class Schedules" 
+                                        icon={Clock} colorClass="bg-amber-50 text-amber-700 hover:bg-amber-100" 
+                                    />
+                                    <QuickAccessCard 
+                                        onClick={() => navigate('/transport/routes')} 
+                                        title="Transport Routes" desc="Buses & Pickup Points" 
+                                        icon={Bus} colorClass="bg-rose-50 text-rose-700 hover:bg-rose-100" 
+                                    />
+                                </div>
+                            </div>
+
+                            {/* System Administration */}
+                            <div>
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">System Administration</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                    <QuickAccessCard 
+                                        onClick={() => navigate('/settings/users')} 
+                                        title="System Users" desc="Credentials & Passwords" 
+                                        icon={Users} colorClass="bg-slate-100 text-slate-700 hover:bg-slate-200" 
+                                    />
+                                    <QuickAccessCard 
+                                        onClick={() => navigate('/settings/roles')} 
+                                        title="Roles & Permissions" desc="Access Controls Matrix" 
+                                        icon={Shield} colorClass="bg-indigo-50 text-indigo-700 hover:bg-indigo-100" 
+                                    />
+                                    <QuickAccessCard 
+                                        onClick={() => navigate('/settings')} 
+                                        title="SMTP Settings" desc="Mail Server Configurations" 
+                                        icon={Settings} colorClass="bg-purple-50 text-purple-700 hover:bg-purple-100" 
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
 

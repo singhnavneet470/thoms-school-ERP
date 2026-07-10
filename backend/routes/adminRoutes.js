@@ -5,7 +5,7 @@ const { verifyToken, isSuperAdmin } = require('../middleware/auth');
 const pool = require('../config/db');
 
 router.post('/users', [verifyToken, isSuperAdmin], async (req, res) => {
-    let { email, password, role, class_name, section } = req.body;
+    let { email, password, role, class_name, section, full_name, phone, gender, status } = req.body;
     try {
         if (!password && role === 'student') {
             password = '123456';
@@ -14,8 +14,8 @@ router.post('/users', [verifyToken, isSuperAdmin], async (req, res) => {
         }
         const hashedPassword = await bcrypt.hash(password, 8);
         const [result] = await pool.query(
-            'INSERT INTO users (email, password, role, class, section) VALUES (?, ?, ?, ?, ?)',
-            [email, hashedPassword, role, class_name || null, section || null]
+            'INSERT INTO users (email, password, role, class, section, full_name, phone, gender, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [email, hashedPassword, role, class_name || null, section || null, full_name || null, phone || null, gender || 'Male', status || 'Active']
         );
         res.status(201).json({ message: 'User created successfully', id: result.insertId });
     } catch (error) {
@@ -45,15 +45,15 @@ router.delete('/users/:id', [verifyToken, isSuperAdmin], async (req, res) => {
 
 // Update user (Super Admin only)
 router.put('/users/:id', [verifyToken, isSuperAdmin], async (req, res) => {
-    const { password, role, class_name, section } = req.body;
+    const { password, role, class_name, section, email, full_name, phone, gender, status } = req.body;
     try {
         if (password) {
             const hashedPassword = await bcrypt.hash(password, 8);
-            await pool.query('UPDATE users SET password = ?, role = ?, class = ?, section = ? WHERE id = ?', 
-                [hashedPassword, role, class_name || null, section || null, req.params.id]);
+            await pool.query('UPDATE users SET password = ?, role = ?, class = ?, section = ?, email = ?, full_name = ?, phone = ?, gender = ?, status = ? WHERE id = ?', 
+                [hashedPassword, role, class_name || null, section || null, email, full_name || null, phone || null, gender || 'Male', status || 'Active', req.params.id]);
         } else {
-            await pool.query('UPDATE users SET role = ?, class = ?, section = ? WHERE id = ?', 
-                [role, class_name || null, section || null, req.params.id]);
+            await pool.query('UPDATE users SET role = ?, class = ?, section = ?, email = ?, full_name = ?, phone = ?, gender = ?, status = ? WHERE id = ?', 
+                [role, class_name || null, section || null, email, full_name || null, phone || null, gender || 'Male', status || 'Active', req.params.id]);
         }
         res.status(200).json({ message: 'User updated successfully' });
     } catch (error) {
@@ -86,6 +86,37 @@ router.post('/settings', [verifyToken, isSuperAdmin], async (req, res) => {
             );
         }
         res.status(200).json({ message: 'Settings updated successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get student attendance for a date
+router.get('/attendance', [verifyToken], async (req, res) => {
+    const { date } = req.query;
+    try {
+        if (!date) return res.status(400).json({ error: 'Date query parameter is required' });
+        const [rows] = await pool.query('SELECT user_id, status FROM student_attendance WHERE date = ?', [date]);
+        res.status(200).json(rows);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Save student attendance in bulk
+router.post('/attendance', [verifyToken], async (req, res) => {
+    const { date, attendanceData } = req.body;
+    try {
+        if (!date || !attendanceData) {
+            return res.status(400).json({ error: 'Date and attendanceData are required' });
+        }
+        for (const [userId, status] of Object.entries(attendanceData)) {
+            await pool.query(
+                'INSERT INTO student_attendance (user_id, date, status) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE status = ?',
+                [userId, date, status, status]
+            );
+        }
+        res.status(200).json({ message: 'Attendance saved successfully' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
