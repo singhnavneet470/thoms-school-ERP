@@ -1,4 +1,3 @@
-require('express-async-errors');
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -26,7 +25,8 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/uploads', express.static('uploads'));
 
-app.use('/api/auth', require('./modules/auth/auth.routes'));
+app.use('/api/auth', require('./modules/auth/auth.route'));
+app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/payments', paymentsRouter);
 
 app.get('/', (req, res) => {

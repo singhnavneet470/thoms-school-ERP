@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { CheckCircle, XCircle, Search, Save, AlertCircle } from 'lucide-react';
+import api from '../../api/axios';
 
 const StudentAttendance = () => {
     const { user } = useContext(AuthContext);
@@ -16,25 +17,46 @@ const StudentAttendance = () => {
         fetchStudents();
     }, []);
 
+    useEffect(() => {
+        if (students.length > 0) {
+            fetchAttendance();
+        }
+    }, [date, students]);
+
     const fetchStudents = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/auth/students', {
-                headers: { 'Authorization': `Bearer ${user.accessToken}` }
+            const response = await api.get('/auth/students');
+            const data = response.data.map(s => ({
+                ...s,
+                name: s.full_name || s.email.split('@')[0]
+            }));
+            setStudents(data);
+            setFilteredStudents(data);
+            
+            const initialData = {};
+            data.forEach(s => {
+                initialData[s.id] = 'Present';
             });
-            const data = await response.json();
-            if (response.ok) {
-                setStudents(data);
-                setFilteredStudents(data);
-                
-                // Initialize attendance data to 'Present' by default
-                const initialData = {};
-                data.forEach(s => {
-                    initialData[s.id] = 'Present';
-                });
-                setAttendanceData(initialData);
-            }
+            setAttendanceData(initialData);
         } catch (error) {
             console.error('Failed to fetch students', error);
+        }
+    };
+
+    const fetchAttendance = async () => {
+        try {
+            const response = await api.get(`/admin/attendance?date=${date}`);
+            const marked = response.data;
+            const updatedData = {};
+            students.forEach(s => {
+                updatedData[s.id] = 'Present';
+            });
+            marked.forEach(m => {
+                updatedData[m.user_id] = m.status;
+            });
+            setAttendanceData(updatedData);
+        } catch (error) {
+            console.error('Failed to fetch attendance records', error);
         }
     };
 
@@ -42,10 +64,10 @@ const StudentAttendance = () => {
         e.preventDefault();
         let filtered = students;
         if (searchClass) {
-            filtered = filtered.filter(s => s.class === searchClass);
+            filtered = filtered.filter(s => s.class?.toLowerCase().includes(searchClass.toLowerCase()));
         }
         if (searchSection) {
-            filtered = filtered.filter(s => s.section === searchSection);
+            filtered = filtered.filter(s => s.section?.toLowerCase().includes(searchSection.toLowerCase()));
         }
         setFilteredStudents(filtered);
     };
@@ -54,11 +76,19 @@ const StudentAttendance = () => {
         setAttendanceData(prev => ({ ...prev, [id]: status }));
     };
 
-    const handleSaveAttendance = () => {
-        // Here you would typically send it to the backend via POST /attendance
-        console.log('Saving attendance for', date, attendanceData);
-        setNotification({ type: 'success', message: `Attendance for ${date} saved successfully!` });
-        setTimeout(() => setNotification(null), 3000);
+    const handleSaveAttendance = async () => {
+        try {
+            await api.post('/admin/attendance', {
+                date,
+                attendanceData
+            });
+            setNotification({ type: 'success', message: `Attendance for ${date} saved successfully to database!` });
+            setTimeout(() => setNotification(null), 3000);
+        } catch (error) {
+            console.error('Failed to save attendance', error);
+            setNotification({ type: 'error', message: 'Failed to save attendance records.' });
+            setTimeout(() => setNotification(null), 4000);
+        }
     };
 
     return (

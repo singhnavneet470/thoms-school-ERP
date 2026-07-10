@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Search, Plus, FileText, Download, Edit2, Trash2, Filter, User, CheckCircle, AlertCircle, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, Download, Edit2, Trash2, User, CheckCircle, X } from 'lucide-react';
+import api from '../../api/axios';
 
 const classOptions = [
     'Nursery', 'LKG', 'UKG', 
@@ -9,16 +10,8 @@ const classOptions = [
 
 const sectionOptions = ['A', 'B', 'C', 'D', 'Science', 'Commerce', 'Arts'];
 
-const initialStudents = [
-    { id: 1001, name: 'Alice Walker', class: 'Class 10', section: 'A', gender: 'Female', phone: '9876543210', status: 'Active' },
-    { id: 1002, name: 'Bob Marley', class: 'Class 8', section: 'B', gender: 'Male', phone: '8765432109', status: 'Active' },
-    { id: 1003, name: 'Charlie Brown', class: 'Class 5', section: 'A', gender: 'Male', phone: '7654321098', status: 'Inactive' },
-    { id: 1004, name: 'Diana Prince', class: 'Class 12', section: 'Science', gender: 'Female', phone: '6543210987', status: 'Active' },
-    { id: 1005, name: 'Ethan Hunt', class: 'Nursery', section: 'A', gender: 'Male', phone: '5432109876', status: 'Active' },
-];
-
 const StudentDetails = () => {
-    const [students, setStudents] = useState(initialStudents);
+    const [students, setStudents] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterClass, setFilterClass] = useState('');
     const [filterSection, setFilterSection] = useState('');
@@ -28,8 +21,30 @@ const StudentDetails = () => {
     const [notification, setNotification] = useState(null);
 
     const [formData, setFormData] = useState({
-        name: '', class: '', section: '', gender: 'Male', phone: '', status: 'Active'
+        email: '', name: '', class: '', section: '', gender: 'Male', phone: '', status: 'Active'
     });
+
+    useEffect(() => {
+        fetchStudents();
+    }, []);
+
+    const fetchStudents = async () => {
+        try {
+            const response = await api.get('/auth/students');
+            const mapped = response.data.map(s => ({
+                ...s,
+                name: s.full_name || s.email.split('@')[0],
+                class: s.class || '',
+                section: s.section || '',
+                gender: s.gender || 'Male',
+                phone: s.phone || '',
+                status: s.status || 'Active'
+            }));
+            setStudents(mapped);
+        } catch (err) {
+            console.error('Failed to fetch students:', err);
+        }
+    };
 
     const handleOpenModal = (student = null) => {
         if (student) {
@@ -37,7 +52,7 @@ const StudentDetails = () => {
             setFormData(student);
         } else {
             setEditingStudent(null);
-            setFormData({ name: '', class: 'Class 1', section: 'A', gender: 'Male', phone: '', status: 'Active' });
+            setFormData({ email: '', name: '', class: 'Class 10', section: 'A', gender: 'Male', phone: '', status: 'Active' });
         }
         setIsModalOpen(true);
     };
@@ -47,30 +62,63 @@ const StudentDetails = () => {
         setEditingStudent(null);
     };
 
-    const handleSave = (e) => {
+    const handleSave = async (e) => {
         e.preventDefault();
-        if (editingStudent) {
-            setStudents(students.map(s => s.id === editingStudent.id ? { ...formData, id: editingStudent.id } : s));
-            setNotification('Student record updated successfully!');
-        } else {
-            const newId = students.length > 0 ? Math.max(...students.map(s => s.id)) + 1 : 1001;
-            setStudents([...students, { ...formData, id: newId }]);
-            setNotification('New student enrolled successfully!');
+        try {
+            if (editingStudent) {
+                await api.put(`/admin/users/${editingStudent.id}`, {
+                    role: 'student',
+                    email: formData.email,
+                    full_name: formData.name,
+                    class_name: formData.class,
+                    section: formData.section,
+                    phone: formData.phone,
+                    gender: formData.gender,
+                    status: formData.status
+                });
+                setNotification('Student record updated successfully!');
+            } else {
+                const email = formData.email || (formData.name.toLowerCase().replace(/\s+/g, '') + '@erp.com');
+                await api.post('/admin/users', {
+                    role: 'student',
+                    email: email,
+                    password: 'student123',
+                    full_name: formData.name,
+                    class_name: formData.class,
+                    section: formData.section,
+                    phone: formData.phone,
+                    gender: formData.gender,
+                    status: formData.status
+                });
+                setNotification('New student enrolled successfully!');
+            }
+            fetchStudents();
+            handleCloseModal();
+            setTimeout(() => setNotification(null), 3000);
+        } catch (err) {
+            console.error('Failed to save student:', err);
+            setNotification(err.response?.data?.error || 'Failed to save student.');
+            setTimeout(() => setNotification(null), 4000);
         }
-        handleCloseModal();
-        setTimeout(() => setNotification(null), 3000);
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this student record?')) {
-            setStudents(students.filter(s => s.id !== id));
-            setNotification('Student record deleted.');
-            setTimeout(() => setNotification(null), 3000);
+            try {
+                await api.delete(`/admin/users/${id}`);
+                setNotification('Student record deleted.');
+                fetchStudents();
+                setTimeout(() => setNotification(null), 3000);
+            } catch (err) {
+                console.error('Failed to delete student:', err);
+            }
         }
     };
 
     const filteredStudents = students.filter(s => {
-        const matchSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.id.toString().includes(searchTerm);
+        const matchSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                            s.email.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                            s.id.toString().includes(searchTerm);
         const matchClass = filterClass ? s.class === filterClass : true;
         const matchSection = filterSection ? s.section === filterSection : true;
         return matchSearch && matchClass && matchSection;
@@ -89,9 +137,6 @@ const StudentDetails = () => {
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <button className="inline-flex items-center gap-2 bg-white text-slate-700 px-5 py-2.5 rounded-2xl text-sm font-bold border border-slate-200 hover:bg-slate-50 transition-all shadow-sm">
-                        <Download className="w-4 h-4" /> Export
-                    </button>
                     <button 
                         onClick={() => handleOpenModal()}
                         className="inline-flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] hover:shadow-[0_6px_20px_rgba(79,70,229,0.23)] hover:-translate-y-0.5"
@@ -113,7 +158,7 @@ const StudentDetails = () => {
                     <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                     <input 
                         type="text" 
-                        placeholder="Search by name or admission no..." 
+                        placeholder="Search by name or email..." 
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white outline-none transition-all placeholder:text-slate-400 shadow-inner"
@@ -143,7 +188,7 @@ const StudentDetails = () => {
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-slate-900 border-b border-slate-800 text-white">
+                            <tr className="bg-slate-950 border-b border-slate-800 text-white">
                                 <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-300">Student Profile</th>
                                 <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-300">Class & Section</th>
                                 <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-300">Gender</th>
@@ -162,7 +207,7 @@ const StudentDetails = () => {
                                             </div>
                                             <div>
                                                 <div className="text-sm font-black text-slate-800 group-hover:text-indigo-700 transition-colors">{student.name}</div>
-                                                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Adm No: {student.id}</div>
+                                                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{student.email}</div>
                                             </div>
                                         </div>
                                     </td>
@@ -173,7 +218,7 @@ const StudentDetails = () => {
                                         </div>
                                     </td>
                                     <td className="py-4 px-6 text-sm font-bold text-slate-600">{student.gender}</td>
-                                    <td className="py-4 px-6 text-sm font-bold text-slate-600">📞 {student.phone}</td>
+                                    <td className="py-4 px-6 text-sm font-bold text-slate-600">📞 {student.phone || 'N/A'}</td>
                                     <td className="py-4 px-6">
                                         <span className={`inline-flex items-center px-3 py-1 text-xs font-bold rounded-xl shadow-sm border ${
                                             student.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-1 ring-emerald-500/20' :
@@ -229,6 +274,18 @@ const StudentDetails = () => {
                         <div className="p-6 overflow-y-auto">
                             <form onSubmit={handleSave} className="space-y-5">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Email Address</label>
+                                        <input 
+                                            type="email" 
+                                            required
+                                            value={formData.email}
+                                            onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                            className="block w-full px-5 py-3 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner"
+                                            placeholder="e.g. student@school.com"
+                                            disabled={!!editingStudent}
+                                        />
+                                    </div>
                                     <div>
                                         <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Full Name</label>
                                         <input 
