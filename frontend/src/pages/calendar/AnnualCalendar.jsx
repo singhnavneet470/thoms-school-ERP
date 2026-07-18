@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, List, Grid, Tag, Clock, Save, X } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, List, Grid, Tag, Clock, Save, X, Upload } from 'lucide-react';
 import axios from 'axios';
 
 const AnnualCalendar = () => {
@@ -84,7 +84,10 @@ const AnnualCalendar = () => {
                     </h1>
                     <p className="text-sm text-fuchsia-600/80 font-medium mt-1">Manage academic events and view Indian public holidays.</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                    <button className="inline-flex items-center gap-2 bg-white text-fuchsia-600 border border-fuchsia-200 px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-fuchsia-50 transition-all shadow-sm">
+                        <Upload className="w-4 h-4" /> Upload PDF
+                    </button>
                     <button 
                         onClick={() => setIsFormOpen(true)}
                         className="inline-flex items-center gap-2 bg-fuchsia-600 text-white px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-fuchsia-700 transition-all shadow-[0_4px_14px_0_rgba(192,38,211,0.39)] hover:shadow-[0_6px_20px_rgba(192,38,211,0.23)] hover:-translate-y-0.5">
