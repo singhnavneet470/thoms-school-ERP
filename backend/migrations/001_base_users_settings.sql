@@ -19,7 +19,8 @@ ALTER TABLE `users`
 ALTER TABLE `users`
   MODIFY COLUMN `role` ENUM(
     'super_admin','admin','principal','vp',
-    'receptionist','cashier','teacher','busstaff','student'
+    'receptionist','cashier','teacher','bus_staff','student',
+    'fee_collector','accountant'
   ) NOT NULL DEFAULT 'student';
 
 CREATE TABLE IF NOT EXISTS `webhook_events` (

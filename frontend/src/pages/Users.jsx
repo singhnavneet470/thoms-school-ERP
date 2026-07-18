@@ -24,72 +24,60 @@ const Users = () => {
         }
     }, [user, navigate]);
 
-    const fetchUsers = async () => {
+    const fetchUsers = () => {
         try {
-            const response = await fetch('http://localhost:5000/api/admin/users', {
-                headers: { 'Authorization': `Bearer ${user.accessToken}` }
-            });
-            const data = await response.json();
-            if (response.ok) {
-                setUsers(data);
+            const savedData = localStorage.getItem('thoms_users');
+            if (savedData) {
+                setUsers(JSON.parse(savedData));
+            } else {
+                const defaultUsers = [
+                    { id: 1, email: 'admin@school.com', role: 'super_admin' }
+                ];
+                setUsers(defaultUsers);
+                localStorage.setItem('thoms_users', JSON.stringify(defaultUsers));
             }
         } catch (error) {
             console.error('Failed to fetch users', error);
         }
     };
 
-    const handleCreateUser = async (e) => {
+    const handleCreateUser = (e) => {
         e.preventDefault();
         setLoading(true);
-        let payload = { ...newUser };
+        let payload = { ...newUser, id: Date.now() };
         if ((payload.role === 'student' || payload.role === 'teacher') && !payload.password) {
             payload.password = payload.role === 'student' ? 'student123' : 'teacher123';
         }
         try {
-            const response = await fetch('http://localhost:5000/api/admin/users', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${user.accessToken}`
-                },
-                body: JSON.stringify(payload)
-            });
-            
-            if (response.ok) {
-                fetchUsers();
-                setNewUser({ email: '', password: '', role: 'admin', class_name: '', section: '' });
-                setNotification({ type: 'success', message: 'User created successfully!' });
-            } else {
-                setNotification({ type: 'error', message: 'Failed to create user. Email might already exist.' });
-            }
+            const updatedUsers = [...users, payload];
+            setUsers(updatedUsers);
+            localStorage.setItem('thoms_users', JSON.stringify(updatedUsers));
+            setNewUser({ email: '', password: '', role: 'admin', class_name: '', section: '' });
+            setNotification({ type: 'success', message: 'User created successfully!' });
         } catch (error) {
-            setNotification({ type: 'error', message: 'Network error while creating user.' });
+            setNotification({ type: 'error', message: 'Failed to create user.' });
             console.error(error);
         } finally {
             setLoading(false);
+            setTimeout(() => setNotification(null), 3000);
         }
     };
 
-    const handleDeleteUser = async (id) => {
+    const handleDeleteUser = (id) => {
         try {
-            const response = await fetch(`http://localhost:5000/api/admin/users/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${user.accessToken}` }
-            });
-            
-            if (response.ok) {
-                fetchUsers();
-                setDeleteConfirm(null);
-                setNotification({ type: 'success', message: 'User deleted successfully!' });
-            } else {
-                setNotification({ type: 'error', message: 'Failed to delete user.' });
-            }
+            const updatedUsers = users.filter(u => u.id !== id);
+            setUsers(updatedUsers);
+            localStorage.setItem('thoms_users', JSON.stringify(updatedUsers));
+            setDeleteConfirm(null);
+            setNotification({ type: 'success', message: 'User deleted successfully!' });
         } catch (error) {
-            setNotification({ type: 'error', message: 'Network error while deleting user.' });
+            setNotification({ type: 'error', message: 'Failed to delete user.' });
+        } finally {
+            setTimeout(() => setNotification(null), 3000);
         }
     };
 
-    const handleUpdateUser = async (e) => {
+    const handleUpdateUser = (e) => {
         e.preventDefault();
         setEditLoading(true);
         let updatePayload = { role: editUser.role, password: editUser.password || undefined, class_name: editUser.class_name, section: editUser.section };
@@ -97,26 +85,16 @@ const Users = () => {
             updatePayload.password = editUser.role === 'student' ? 'student123' : 'teacher123';
         }
         try {
-            const response = await fetch(`http://localhost:5000/api/admin/users/${editUser.id}`, {
-                method: 'PUT',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${user.accessToken}`
-                },
-                body: JSON.stringify(updatePayload)
-            });
-            
-            if (response.ok) {
-                fetchUsers();
-                setEditUser(null);
-                setNotification({ type: 'success', message: 'User updated successfully!' });
-            } else {
-                setNotification({ type: 'error', message: 'Failed to update user.' });
-            }
+            const updatedUsers = users.map(u => u.id === editUser.id ? { ...u, ...updatePayload } : u);
+            setUsers(updatedUsers);
+            localStorage.setItem('thoms_users', JSON.stringify(updatedUsers));
+            setEditUser(null);
+            setNotification({ type: 'success', message: 'User updated successfully!' });
         } catch (error) {
-            setNotification({ type: 'error', message: 'Network error while updating user.' });
+            setNotification({ type: 'error', message: 'Failed to update user.' });
         } finally {
             setEditLoading(false);
+            setTimeout(() => setNotification(null), 3000);
         }
     };
 

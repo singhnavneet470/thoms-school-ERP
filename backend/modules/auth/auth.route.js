@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const ctrl = require('./auth.controller');
 const { verifyToken } = require('../../middleware/auth');
-const { loginLimiter } = require('../../middleware/rateLimiter');
+const { loginLimiter } = require('../../middleware/ratelimiter');
 
 router.post('/login', loginLimiter, ctrl.login);
 router.post('/refresh', ctrl.refresh);

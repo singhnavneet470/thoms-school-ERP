@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS `razorpay_payments` (
   `currency` CHAR(3) DEFAULT 'INR',
   `method` VARCHAR(50) DEFAULT NULL,
   `status` ENUM('captured','failed','refunded','partially_refunded') DEFAULT 'captured',
-  `captured_at` TIMESTAMP DEFAULT NULL,
+  `captured_at` TIMESTAMP NULL DEFAULT NULL,
   `raw_payload` JSON DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX `idx_razorpay_payment_id` (`razorpay_payment_id`),
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS `refunds` (
   `status` ENUM('pending','processed','failed') DEFAULT 'pending',
   `reason` VARCHAR(255) DEFAULT NULL,
   `initiated_by` INT NOT NULL,
-  `processed_at` TIMESTAMP DEFAULT NULL,
+  `processed_at` TIMESTAMP NULL DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`initiated_by`) REFERENCES `users`(`id`)
 ) ENGINE=InnoDB;

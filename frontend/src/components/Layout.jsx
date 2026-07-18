@@ -1,758 +1,384 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { useNavigate, Link, Outlet, useLocation } from 'react-router-dom';
-import { 
-    ShieldAlert, LayoutDashboard, Users, GraduationCap, Network, Banknote, BookOpen, Clock, CalendarDays, Key, Trash2, Home, HelpCircle, Tags, Users2, UserCheck, Globe, DollarSign, Layers, FileCode2, Receipt, MonitorPlay, Shield, Database, Languages, Puzzle, LogOut, Search, Bell, Settings, ChevronDown, ChevronRight, Menu, X, BookText, Building2, UserX, Star, Briefcase, CalendarCheck, FileSpreadsheet, CalendarPlus, Building, Zap, Tag, Percent, ArrowRightCircle, Book, Grid, CheckSquare, PersonStanding, Megaphone, Mail, MessageSquare, List, UploadCloud, Video, FileType, BookOpenCheck, Bus, MapPin, Truck, Map, UserMinus, Award, Settings2, CreditCard, Calendar
+import { Navigate, Link, Outlet, useLocation } from 'react-router-dom';
+import {
+    LayoutDashboard, GraduationCap, Users, CalendarCheck, Banknote, Bus,
+    BookOpen, Building, FileText, BookOpenCheck, Calculator, BarChart2,
+    Settings, LogOut, Search, Bell, MessageSquare, Menu, X, ChevronRight,
+    ShieldAlert, User, Moon, Sun, Archive, Globe, ChevronDown
 } from 'lucide-react';
 
-const Layout = () => {
+const sidebarItems = [
+    { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+    { label: 'Academic', icon: GraduationCap, subItems: [
+        { label: 'Students', path: '/academic/students' },
+        { label: 'Admission', path: '/academic/admission' },
+        { label: 'Teachers', path: '/academic/teachers' },
+        { label: 'Staff', path: '/academic/staff' },
+        { label: 'Class', path: '/academic/class' },
+        { label: 'Section', path: '/academic/section' },
+        { label: 'Timetable', path: '/academic/timetable' },
+        { label: 'Homework', path: '/academic/homework' },
+    ] },
+    { label: 'Attendance', icon: CalendarCheck, subItems: [
+        { label: 'Student Attendance', path: '/attendance/student' },
+        { label: 'Teacher Attendance', path: '/attendance/teacher' },
+        { label: 'Staff Attendance', path: '/attendance/staff' },
+        { label: 'Leave Management', path: '/attendance/leave' },
+    ] },
+    { label: 'Examination', icon: BookOpenCheck, subItems: [
+        { label: 'Exams', path: '/exam/exams' },
+        { label: 'Marks', path: '/exam/marks' },
+        { label: 'Grade', path: '/exam/grade' },
+        { label: 'Result', path: '/exam/result' },
+        { label: 'Promotion', path: '/exam/promotion' },
+    ] },
+    { label: 'Fees', icon: Banknote, subItems: [
+        { label: 'Collect Fees', path: '/fees/collect' },
+        { label: 'Offline Bank Payments', path: '/fees/offline-bank' },
+        { label: 'Search Fees Payment', path: '/fees/search' },
+        { label: 'Search Due Fees', path: '/fees/due' },
+        { label: 'Fees Master', path: '/fees/master' },
+        { label: 'Quick Fees', path: '/fees/quick' },
+        { label: 'Fees Group', path: '/fees/group' },
+        { label: 'Fees Type', path: '/fees/type' },
+        { label: 'Fees Discount', path: '/fees/discount' },
+        { label: 'Fees Carry Forward', path: '/fees/carry-forward' },
+        { label: 'Fees Reminder', path: '/fees/reminder' },
+    ] },
+    { label: 'Transport', icon: Bus, subItems: [
+        { label: 'Bus', path: '/transport/bus' },
+        { label: 'Routes', path: '/transport/routes' },
+        { label: 'Driver', path: '/transport/driver' },
+        { label: 'Vehicle', path: '/transport/vehicle' },
+        { label: 'GPS Tracking', path: '/transport/gps' },
+        { label: 'Payment Settings', path: '/transport/settings' },
+    ] },
+    { label: 'Hostel', icon: Building, subItems: [
+        { label: 'Rooms', path: '/hostel/rooms' },
+        { label: 'Allocation', path: '/hostel/allocation' },
+        { label: 'Warden', path: '/hostel/warden' },
+    ] },
+    { label: 'Library', icon: BookOpen, subItems: [
+        { label: 'Books', path: '/library/books' },
+        { label: 'Issue', path: '/library/issue' },
+        { label: 'Return', path: '/library/return' },
+        { label: 'Fine', path: '/library/fine' },
+    ] },
+    { label: 'Inventory', icon: Archive, subItems: [
+        { label: 'Dashboard', path: '/inventory/dashboard' },
+        { label: 'Item List', path: '/inventory/items' },
+        { label: 'Add Item', path: '/inventory/add-item' },
+        { label: 'Item Category', path: '/inventory/categories' },
+        { label: 'Stock Management', path: '/inventory/stock' },
+        { label: 'Issue Item', path: '/inventory/issue' },
+        { label: 'Issue Return', path: '/inventory/issue-return' },
+        { label: 'Add Purchase', path: '/inventory/purchase' },
+        { label: 'Purchase List', path: '/inventory/purchase-list' },
+        { label: 'Assets', path: '/inventory/assets' },
+        { label: 'Stationery', path: '/inventory/stationery' },
+        { label: 'Suppliers', path: '/inventory/suppliers' },
+    ] },
+    { label: 'Accounts', icon: Calculator, subItems: [
+        { label: 'Dashboard', path: '/accounts/dashboard' },
+        { label: 'Add Income', path: '/accounts/income' },
+        { label: 'Income List', path: '/accounts/income-list' },
+        { label: 'Add Expense', path: '/accounts/expense' },
+        { label: 'Expense List', path: '/accounts/expense-list' },
+        { label: 'Add Payroll', path: '/accounts/payroll' },
+        { label: 'Payroll List', path: '/accounts/payroll-list' },
+        { label: 'Staff Salary', path: '/accounts/salary' },
+        { label: 'Bank Accounts', path: '/accounts/bank' },
+        { label: 'Balance Sheet', path: '/accounts/balance-sheet' },
+    ] },
+    { label: 'HR', icon: Users, subItems: [
+        { label: 'Employees', path: '/hr/staff-directory' },
+        { label: 'Departments', path: '/hr/department' },
+        { label: 'Designation', path: '/hr/designation' },
+    ] },
+    { label: 'Communication', icon: MessageSquare, subItems: [
+        { label: 'Notice Board', path: '/communicate/notice-board' },
+        { label: 'SMS', path: '/communicate/sms' },
+        { label: 'Email', path: '/communicate/email' },
+        { label: 'WhatsApp', path: '/communicate/whatsapp' },
+        { label: 'Circular', path: '/communicate/circular' },
+    ] },
+    { label: 'Reports', icon: BarChart2, subItems: [
+        { label: 'Student Report', path: '/reports/student' },
+        { label: 'Attendance Report', path: '/reports/attendance' },
+        { label: 'Fee Report', path: '/reports/fee' },
+        { label: 'Exam Report', path: '/reports/exam' },
+        { label: 'Staff Report', path: '/reports/staff' },
+    ] },
+
+    { label: 'Settings', icon: Settings, subItems: [
+        { label: 'School Settings', path: '/settings/general' },
+        { label: 'Session', path: '/settings/session' },
+        { label: 'Roles', path: '/settings/roles' },
+        { label: 'Permissions', path: '/settings/permissions' },
+        { label: 'Backup', path: '/settings/backup' },
+        { label: 'SMTP', path: '/settings/smtp' },
+        { label: 'Payment Gateway', path: '/settings/payment' },
+    ] },
+];
+
+function Layout() {
     const { user, logout } = useContext(AuthContext);
-    const navigate = useNavigate();
     const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(true);
-    const [studentsMenuOpen, setStudentsMenuOpen] = useState(false);
-    const [hrMenuOpen, setHrMenuOpen] = useState(false);
-    const [feesMenuOpen, setFeesMenuOpen] = useState(false);
-    const [academicsMenuOpen, setAcademicsMenuOpen] = useState(false);
-    const [alumniMenuOpen, setAlumniMenuOpen] = useState(false);
-    const [calendarMenuOpen, setCalendarMenuOpen] = useState(false);
-    const [attendanceMenuOpen, setAttendanceMenuOpen] = useState(false);
-    const [communicateMenuOpen, setCommunicateMenuOpen] = useState(false);
-    const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
-    const [examMenuOpen, setExamMenuOpen] = useState(false);
-    const [transportMenuOpen, setTransportMenuOpen] = useState(false);
-    const [systemMenuOpen, setSystemMenuOpen] = useState(false);
+    const [profileOpen, setProfileOpen] = useState(false);
+    const [notifOpen, setNotifOpen] = useState(false);
+    const [expandedGroup, setExpandedGroup] = useState('Academics & Operations');
+    const [expandedMenus, setExpandedMenus] = useState({'Dashboard':true});
 
-    const [permissions, setPermissions] = useState(null);
+    const toggleMenu = (label) => setExpandedMenus(prev => ({...prev, [label]: !prev[label]}));
 
-    useEffect(() => {
-        if (!user) return;
-        const fetchPerms = async () => {
-            try {
-                const response = await fetch('http://localhost:5000/api/auth/permissions', {
-                    headers: { 'Authorization': `Bearer ${user.accessToken}` }
-                });
-                const data = await response.json();
-                if (data.role_permissions) {
-                    setPermissions(JSON.parse(data.role_permissions));
-                } else {
-                    setPermissions({});
-                }
-            } catch (e) {
-                console.error('Failed to fetch permissions', e);
-            }
-        };
-        fetchPerms();
-    }, [user]);
+    if (!user) return <Navigate to="/" replace />;
 
-    const r = user?.role;
-    
-    // Default fallback if permissions haven't loaded or aren't set
-    const defaultPerms = {
-        admin: ['student_info', 'hr', 'fees', 'academics', 'alumni', 'calendar', 'attendance', 'communicate', 'download', 'exam', 'transport', 'system'],
-        super_admin: ['student_info', 'hr', 'fees', 'academics', 'alumni', 'calendar', 'attendance', 'communicate', 'download', 'exam', 'transport', 'system'],
-        teacher: ['student_info', 'academics', 'attendance', 'communicate', 'download', 'exam', 'calendar'],
-        student: ['calendar', 'download', 'exam'],
-        fee_collector: ['fees'],
-        bus_staff: ['transport'],
-        accountant: ['fees']
+    const isActive = (path) => location.pathname === path ||
+        (path !== '/dashboard' && location.pathname.startsWith(path));
+
+    const roleBg = {
+        super_admin: '#6366f1', admin: '#3b82f6', teacher: '#f59e0b',
+        student: '#10b981', fee_collector: '#14b8a6', bus_staff: '#eab308', accountant: '#06b6d4'
     };
-
-    const rolePerms = permissions ? (permissions[r] || []) : (defaultPerms[r] || []);
-    
-    const canSeeStudentInfo = rolePerms.includes('student_info');
-    const canSeeHR = rolePerms.includes('hr');
-    const canSeeFees = rolePerms.includes('fees');
-    const canSeeAcademics = rolePerms.includes('academics');
-    const canSeeAlumni = rolePerms.includes('alumni');
-    const canSeeCalendar = rolePerms.includes('calendar');
-    const canSeeAttendance = rolePerms.includes('attendance');
-    const canSeeCommunicate = rolePerms.includes('communicate');
-    const canSeeDownload = rolePerms.includes('download');
-    const canSeeExam = rolePerms.includes('exam');
-    const canSeeTransport = rolePerms.includes('transport');
-    const canSeeSystem = rolePerms.includes('system') || r === 'super_admin';
-
-    if (!user) {
-        navigate('/');
-        return null;
-    }
-
-    const isActive = (path) => location.pathname === path;
-
-    const studentLinks = [
-        { path: '/student/details', label: 'Student Details', icon: <Users className="w-4 h-4" /> },
-        { path: '/student/admission', label: 'Student Admission', icon: <UserCheck className="w-4 h-4" /> },
-        { path: '/student/online-admission', label: 'Online Admission', icon: <Globe className="w-4 h-4" /> },
-        { path: '/student/disabled', label: 'Disabled Students', icon: <UserMinus className="w-4 h-4" /> },
-        { path: '/student/multi-class', label: 'Multi Class Student', icon: <Users2 className="w-4 h-4" /> },
-        { path: '/student/bulk-delete', label: 'Bulk Delete', icon: <Trash2 className="w-4 h-4" /> },
-        { path: '/student/categories', label: 'Student Categories', icon: <Tags className="w-4 h-4" /> },
-        { path: '/student/house', label: 'Student House', icon: <Home className="w-4 h-4" /> },
-        { path: '/student/disable-reason', label: 'Disable Reason', icon: <HelpCircle className="w-4 h-4" /> },
-    ];
-
-    const hrLinks = [
-        { path: '/hr/staff-directory', label: 'Staff Directory', icon: <Building2 className="w-4 h-4" /> },
-        { path: '/hr/staff-attendance', label: 'Staff Attendance', icon: <CalendarCheck className="w-4 h-4" /> },
-        { path: '/hr/payroll', label: 'Payroll', icon: <FileSpreadsheet className="w-4 h-4" /> },
-        { path: '/hr/approve-leave-request', label: 'Approve Leave Request', icon: <CalendarPlus className="w-4 h-4" /> },
-        { path: '/hr/apply-leave', label: 'Apply Leave', icon: <CalendarPlus className="w-4 h-4" /> },
-        { path: '/hr/leave-type', label: 'Leave Type', icon: <Tags className="w-4 h-4" /> },
-        { path: '/hr/teachers-rating', label: 'Teachers Rating', icon: <Star className="w-4 h-4" /> },
-        { path: '/hr/department', label: 'Department', icon: <Building className="w-4 h-4" /> },
-        { path: '/hr/designation', label: 'Designation', icon: <Briefcase className="w-4 h-4" /> },
-        { path: '/hr/disabled-staff', label: 'Disabled Staff', icon: <UserX className="w-4 h-4" /> },
-    ];
-
-    const feesLinks = [
-        { path: '/fees/collect', label: 'Collect Fees', icon: <CreditCard className="w-4 h-4" /> },
-        { path: '/fees/sheet', label: 'Class Fee Sheet', icon: <FileSpreadsheet className="w-4 h-4" /> },
-        { path: '/fees/offline-bank', label: 'Offline Bank Payments', icon: <Building className="w-4 h-4" /> },
-        { path: '/fees/search-payment', label: 'Search Fees Payment', icon: <Search className="w-4 h-4" /> },
-        { path: '/fees/search-due', label: 'Search Due Fees', icon: <Search className="w-4 h-4" /> },
-        { path: '/fees/master', label: 'Fees Master', icon: <Settings2 className="w-4 h-4" /> },
-        { path: '/fees/quick', label: 'Quick Fees', icon: <Zap className="w-4 h-4" /> },
-        { path: '/fees/group', label: 'Fees Group', icon: <Layers className="w-4 h-4" /> },
-        { path: '/fees/type', label: 'Fees Type', icon: <Tag className="w-4 h-4" /> },
-        { path: '/fees/discount', label: 'Fees Discount', icon: <Percent className="w-4 h-4" /> },
-        { path: '/fees/carry-forward', label: 'Fees Carry Forward', icon: <ArrowRightCircle className="w-4 h-4" /> },
-        { path: '/fees/reminder', label: 'Fees Reminder', icon: <Bell className="w-4 h-4" /> },
-    ];
-
-    const academicsLinks = [
-        { path: '/academics/class-timetable', label: 'Class Timetable', icon: <Clock className="w-4 h-4" /> },
-        { path: '/academics/teachers-timetable', label: 'Teachers Timetable', icon: <Clock className="w-4 h-4" /> },
-        { path: '/academics/assign-teacher', label: 'Assign Class Teacher', icon: <UserCheck className="w-4 h-4" /> },
-        { path: '/academics/promote', label: 'Promote Students', icon: <ArrowRightCircle className="w-4 h-4" /> },
-        { path: '/academics/subject-group', label: 'Subject Group', icon: <Layers className="w-4 h-4" /> },
-        { path: '/academics/subjects', label: 'Subjects', icon: <Book className="w-4 h-4" /> },
-        { path: '/academics/class', label: 'Class', icon: <Building className="w-4 h-4" /> },
-        { path: '/academics/sections', label: 'Sections', icon: <Grid className="w-4 h-4" /> },
-    ];
-
-    const alumniLinks = [
-        { path: '/alumni/manage', label: 'Manage Alumni', icon: <Users2 className="w-4 h-4" /> },
-        { path: '/alumni/events', label: 'Events', icon: <CalendarDays className="w-4 h-4" /> },
-    ];
-
-    const calendarLinks = [
-        { path: '/calendar/annual', label: 'Annual Calendar', icon: <Calendar className="w-4 h-4" /> },
-        { path: '/calendar/holiday-type', label: 'Holiday Type', icon: <Tag className="w-4 h-4" /> },
-    ];
-
-    const attendanceLinks = [
-        { path: '/attendance/student', label: 'Student Attendance', icon: <CheckSquare className="w-4 h-4" /> },
-        { path: '/attendance/approve-leave', label: 'Approve Leave', icon: <CalendarPlus className="w-4 h-4" /> },
-        { path: '/attendance/by-date', label: 'Attendance By Date', icon: <CalendarDays className="w-4 h-4" /> },
-    ];
-
-    const communicateLinks = [
-        { path: '/communicate/notice-board', label: 'Notice Board', icon: <List className="w-4 h-4" /> },
-        { path: '/communicate/send-email', label: 'Send Email', icon: <Mail className="w-4 h-4" /> },
-        { path: '/communicate/send-sms', label: 'Send SMS', icon: <MessageSquare className="w-4 h-4" /> },
-        { path: '/communicate/log', label: 'Email / SMS Log', icon: <List className="w-4 h-4" /> },
-        { path: '/communicate/schedule-log', label: 'Schedule Email SMS Log', icon: <Clock className="w-4 h-4" /> },
-        { path: '/communicate/login-credentials', label: 'Login Credentials Send', icon: <Shield className="w-4 h-4" /> },
-        { path: '/communicate/email-template', label: 'Email Template', icon: <FileCode2 className="w-4 h-4" /> },
-        { path: '/communicate/sms-template', label: 'SMS Template', icon: <FileCode2 className="w-4 h-4" /> },
-    ];
-
-    const downloadLinks = [
-        { path: '/download/upload', label: 'Upload/Share Content', icon: <UploadCloud className="w-4 h-4" /> },
-        { path: '/download/share-list', label: 'Content Share List', icon: <List className="w-4 h-4" /> },
-        { path: '/download/video-tutorial', label: 'Video Tutorial', icon: <Video className="w-4 h-4" /> },
-        { path: '/download/content-type', label: 'Content Type', icon: <FileType className="w-4 h-4" /> },
-    ];
-
-    const examLinks = [
-        { path: '/examinations/group', label: 'Exam Group', icon: <Layers className="w-4 h-4" /> },
-        { path: '/examinations/schedule', label: 'Exam Schedule', icon: <CalendarDays className="w-4 h-4" /> },
-        { path: '/examinations/result', label: 'Exam Result', icon: <BookOpenCheck className="w-4 h-4" /> },
-    ];
-
-    const transportLinks = [
-        { path: '/transport/fees-master', label: 'Fees Master', icon: <Settings2 className="w-4 h-4" /> },
-        { path: '/transport/pickup-point', label: 'Pickup Point', icon: <MapPin className="w-4 h-4" /> },
-        { path: '/transport/routes', label: 'Routes', icon: <Map className="w-4 h-4" /> },
-        { path: '/transport/vehicles', label: 'Vehicles', icon: <Truck className="w-4 h-4" /> },
-        { path: '/transport/assign-vehicle', label: 'Assign Vehicle', icon: <Bus className="w-4 h-4" /> },
-        { path: '/transport/route-pickup', label: 'Route Pickup Point', icon: <MapPin className="w-4 h-4" /> },
-        { path: '/transport/student-transport', label: 'Student Transport', icon: <Users className="w-4 h-4" /> },
-        { path: '/transport/student-fees', label: 'Student Transport Fees', icon: <Banknote className="w-4 h-4" /> },
-    ];
-
-    const systemLinks = [
-        { path: '/settings/general', label: 'General Setting', icon: <Settings2 className="w-4 h-4" /> },
-        { path: '/settings/session', label: 'Session Setting', icon: <Clock className="w-4 h-4" /> },
-        { path: '/settings/notification', label: 'Notification Setting', icon: <Bell className="w-4 h-4" /> },
-        { path: '/settings/whatsapp', label: 'Whatsapp Messaging', icon: <MessageSquare className="w-4 h-4" /> },
-        { path: '/settings/sms', label: 'SMS Setting', icon: <MessageSquare className="w-4 h-4" /> },
-        { path: '/settings', label: 'Email Setting', icon: <Mail className="w-4 h-4" /> }, // Points to existing settings
-        { path: '/settings/payment-methods', label: 'Payment Methods', icon: <CreditCard className="w-4 h-4" /> },
-        { path: '/settings/print-header', label: 'Print Header Footer', icon: <FileCode2 className="w-4 h-4" /> },
-        { path: '/settings/thermal-print', label: 'Thermal Print', icon: <Receipt className="w-4 h-4" /> },
-        { path: '/settings/front-cms', label: 'Front CMS Setting', icon: <MonitorPlay className="w-4 h-4" /> },
-        { path: '/settings/roles', label: 'Roles Permissions', icon: <Shield className="w-4 h-4" /> },
-        { path: '/settings/backup', label: 'Backup Restore', icon: <Database className="w-4 h-4" /> },
-        { path: '/settings/languages', label: 'Languages', icon: <Languages className="w-4 h-4" /> },
-        { path: '/settings/currency', label: 'Currency', icon: <DollarSign className="w-4 h-4" /> },
-        { path: '/settings/addons', label: 'Addons', icon: <Puzzle className="w-4 h-4" /> },
-        { path: '/settings/users', label: 'Users', icon: <Users className="w-4 h-4" /> },
-        { path: '/settings/modules', label: 'Modules', icon: <Layers className="w-4 h-4" /> },
-        { path: '/settings/custom-fields', label: 'Custom Fields', icon: <FileCode2 className="w-4 h-4" /> },
-    ];
+    const accent = roleBg[user.role] || '#6366f1';
 
     return (
-        <div className="min-h-screen bg-slate-50 flex font-sans">
-            {/* Sidebar */}
-            <aside className={`fixed inset-y-0 left-0 bg-white border-r border-slate-200 w-64 transition-transform transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:block z-20 flex flex-col`}>
-                <div className="h-16 flex items-center gap-2 px-6 border-b border-slate-200">
-                    <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <ShieldAlert className="w-5 h-5 text-white" />
+        <div className="theme-bg-base theme-text-main" style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: "'Inter',sans-serif", background: '#f1f5f9' }}>
+
+            {/* ── TOP NAVBAR ── */}
+            <header className="theme-bg-surface" style={{
+                height: 60, background: '#fff', borderBottom: '1px solid var(--sidebar-border)',
+                display: 'flex', alignItems: 'center', padding: '0 20px', gap: 16,
+                position: 'sticky', top: 0, zIndex: 50, flexShrink: 0
+            }}>
+                {/* Hamburger */}
+                <button onClick={() => setSidebarOpen(v => !v)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 6, borderRadius: 8, display: 'flex' }}>
+                    {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                </button>
+
+                {/* Logo */}
+                <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none', marginRight: 8 }}>
+                    <div style={{ width: 34, height: 34, borderRadius: 9, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <ShieldAlert className="w-4 h-4 text-white" />
                     </div>
-                    <span className="font-bold text-xl text-slate-900 tracking-tight truncate">Thoms ERP</span>
+                    <span className="theme-text-main" style={{ fontWeight: 900, fontSize: 16, color: '#0f172a', letterSpacing: '-0.3px' }}>Thoms ERP</span>
+                </Link>
+
+                {/* Search */}
+                <div style={{ flex: 1, maxWidth: 420, position: 'relative' }} className="hidden md:block">
+                    <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', width: 15, height: 15 }} />
+                    <input type="text" placeholder="Search students, staff, fees..."
+                        className="theme-bg-base theme-text-main"
+                        style={{
+                            width: '100%', paddingLeft: 36, paddingRight: 16, paddingTop: 8, paddingBottom: 8,
+                            background: '#f8fafc', border: '1.5px solid var(--sidebar-border)', borderRadius: 10,
+                            fontSize: 13.5, color: '#334155', outline: 'none', fontFamily: 'inherit',
+                            boxSizing: 'border-box'
+                        }}
+                        onFocus={e => { e.target.style.border = '1.5px solid #6366f1'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.1)'; }}
+                        onBlur={e => { e.target.style.border = '1.5px solid #e2e8f0'; e.target.style.boxShadow = 'none'; }}
+                    />
                 </div>
-                
-                <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1 scrollbar-hide">
-                    {user.role === 'super_admin' && (
-                        <Link 
-                            to="/dashboard" 
-                            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isActive('/dashboard') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                        >
-                            <LayoutDashboard className="w-5 h-5" />
-                            Dashboard
-                        </Link>
-                    )}
-                    {user.role === 'student' && (
-                        <div className="space-y-1">
-                            <Link 
-                                to="/student-dashboard" 
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isActive('/student-dashboard') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                            >
-                                <LayoutDashboard className="w-5 h-5" />
-                                My Portal
-                            </Link>
-                            <Link 
-                                to="/student/fees" 
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isActive('/student/fees') ? 'bg-amber-50 text-amber-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                            >
-                                <Banknote className="w-5 h-5 text-amber-500" />
-                                Fee Structure
-                            </Link>
-                            <Link 
-                                to="/student/attendance" 
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isActive('/student/attendance') ? 'bg-sky-50 text-sky-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                            >
-                                <CalendarDays className="w-5 h-5 text-sky-500" />
-                                Attendance
-                            </Link>
-                            <Link 
-                                to="/student/results" 
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isActive('/student/results') ? 'bg-fuchsia-50 text-fuchsia-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                            >
-                                <Award className="w-5 h-5 text-fuchsia-500" />
-                                Results
-                            </Link>
-                            <Link 
-                                to="/student/calendar" 
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isActive('/student/calendar') ? 'bg-orange-50 text-orange-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                            >
-                                <BookOpen className="w-5 h-5 text-orange-500" />
-                                Calendar
-                            </Link>
-                            <Link 
-                                to="/student/homework" 
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isActive('/student/homework') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                            >
-                                <BookText className="w-5 h-5 text-indigo-500" />
-                                Homework
-                            </Link>
-                            <Link 
-                                to="/student/transport" 
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isActive('/student/transport') ? 'bg-teal-50 text-teal-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                            >
-                                <Bus className="w-5 h-5 text-teal-500" />
-                                Transport
-                            </Link>
-                            <Link 
-                                to="/student/timetable" 
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isActive('/student/timetable') ? 'bg-amber-50 text-amber-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                            >
-                                <CalendarDays className="w-5 h-5 text-amber-500" />
-                                Timetable
-                            </Link>
-                            <Link 
-                                to="/student/notices" 
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isActive('/student/notices') ? 'bg-rose-50 text-rose-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                            >
-                                <Bell className="w-5 h-5 text-rose-500" />
-                                Notice Board
-                            </Link>
-                            <Link 
-                                to="/student/settings" 
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isActive('/student/settings') ? 'bg-slate-200 text-slate-800' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                            >
-                                <Key className="w-5 h-5 text-slate-400" />
-                                Security Settings
-                            </Link>
+
+                <div style={{ flex: 1 }} />
+
+                {/* Notifications */}
+                <div style={{ position: 'relative' }}>
+                  <button onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); }} className="theme-bg-base theme-text-main" style={{ position: 'relative', background: '#f8fafc', border: '1.5px solid var(--sidebar-border)', borderRadius: 10, width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}>
+                      <Bell className="w-4 h-4" />
+                      <span style={{ position: 'absolute', top: 7, right: 8, width: 7, height: 7, background: '#ef4444', borderRadius: '50%', border: '1.5px solid #fff' }} />
+                  </button>
+                  {notifOpen && (
+                    <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50 font-sans">
+                      <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                        <h3 className="font-bold text-slate-800 text-sm m-0">System Alerts</h3>
+                        <span className="text-xs font-semibold text-indigo-600 cursor-pointer">Mark all read</span>
+                      </div>
+                      <div className="max-h-80 overflow-y-auto">
+                        <div className="px-4 py-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer">
+                          <p className="text-sm font-semibold text-slate-800 m-0">New Admission</p>
+                          <p className="text-xs text-slate-500 mt-0.5 m-0">Application #1042 needs review</p>
+                          <p className="text-[10px] text-slate-400 mt-1 m-0">15 mins ago</p>
                         </div>
-                    )}
-
-                    {/* Student Information Menu */}
-                    {canSeeStudentInfo && (
-                        <div className="pt-2">
-                        <button 
-                            onClick={() => setStudentsMenuOpen(!studentsMenuOpen)}
-                            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-                        >
-                            <div className="flex items-center gap-3">
-                                <GraduationCap className="w-5 h-5 text-indigo-600" />
-                                <span>Student Information</span>
-                            </div>
-                            {studentsMenuOpen ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                        </button>
-                        
-                        {studentsMenuOpen && (
-                            <div className="mt-1 ml-4 pl-4 border-l border-slate-200 space-y-1">
-                                {studentLinks.map((link) => (
-                                    <Link 
-                                        key={link.path}
-                                        to={link.path}
-                                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive(link.path) ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-50'}`}
-                                    >
-                                        <span className={isActive(link.path) ? 'text-indigo-600' : 'text-slate-400'}>
-                                            {link.icon}
-                                        </span>
-                                        {link.label}
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    )}
-
-                    {/* Human Resource Menu */}
-                    {canSeeHR && (
-                        <div className="pt-2">
-                        <button 
-                            onClick={() => setHrMenuOpen(!hrMenuOpen)}
-                            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-                        >
-                            <div className="flex items-center gap-3">
-                                <Network className="w-5 h-5 text-emerald-600" />
-                                <span>Human Resource</span>
-                            </div>
-                            {hrMenuOpen ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                        </button>
-                        
-                        {hrMenuOpen && (
-                            <div className="mt-1 ml-4 pl-4 border-l border-slate-200 space-y-1">
-                                {hrLinks.map((link) => (
-                                    <Link 
-                                        key={link.path}
-                                        to={link.path}
-                                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive(link.path) ? 'bg-emerald-50 text-emerald-700 font-medium' : 'text-slate-600 hover:text-emerald-600 hover:bg-slate-50'}`}
-                                    >
-                                        <span className={isActive(link.path) ? 'text-emerald-600' : 'text-slate-400'}>
-                                            {link.icon}
-                                        </span>
-                                        {link.label}
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    )}
-
-                    {/* Fees Collection Menu */}
-                    {canSeeFees && (
-                        <div className="pt-2">
-                        <button 
-                            onClick={() => setFeesMenuOpen(!feesMenuOpen)}
-                            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-                        >
-                            <div className="flex items-center gap-3">
-                                <Banknote className="w-5 h-5 text-amber-600" />
-                                <span>Fees Collection</span>
-                            </div>
-                            {feesMenuOpen ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                        </button>
-                        
-                        {feesMenuOpen && (
-                            <div className="mt-1 ml-4 pl-4 border-l border-slate-200 space-y-1">
-                                {feesLinks.map((link) => (
-                                    <Link 
-                                        key={link.path}
-                                        to={link.path}
-                                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive(link.path) ? 'bg-amber-50 text-amber-700 font-medium' : 'text-slate-600 hover:text-amber-600 hover:bg-slate-50'}`}
-                                    >
-                                        <span className={isActive(link.path) ? 'text-amber-600' : 'text-slate-400'}>
-                                            {link.icon}
-                                        </span>
-                                        {link.label}
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    )}
-
-                    {/* Academics Menu */}
-                    {canSeeAcademics && (
-                        <div className="pt-2">
-                        <button 
-                            onClick={() => setAcademicsMenuOpen(!academicsMenuOpen)}
-                            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-                        >
-                            <div className="flex items-center gap-3">
-                                <BookOpen className="w-5 h-5 text-sky-600" />
-                                <span>Academics</span>
-                            </div>
-                            {academicsMenuOpen ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                        </button>
-                        
-                        {academicsMenuOpen && (
-                            <div className="mt-1 ml-4 pl-4 border-l border-slate-200 space-y-1">
-                                {academicsLinks.map((link) => (
-                                    <Link 
-                                        key={link.path}
-                                        to={link.path}
-                                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive(link.path) ? 'bg-sky-50 text-sky-700 font-medium' : 'text-slate-600 hover:text-sky-600 hover:bg-slate-50'}`}
-                                    >
-                                        <span className={isActive(link.path) ? 'text-sky-600' : 'text-slate-400'}>
-                                            {link.icon}
-                                        </span>
-                                        {link.label}
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    )}
-
-                    {/* Alumni Menu */}
-                    {canSeeAlumni && (
-                        <div className="pt-2">
-                        <button 
-                            onClick={() => setAlumniMenuOpen(!alumniMenuOpen)}
-                            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-                        >
-                            <div className="flex items-center gap-3">
-                                <PersonStanding className="w-5 h-5 text-rose-600" />
-                                <span>Alumni</span>
-                            </div>
-                            {alumniMenuOpen ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                        </button>
-                        
-                        {alumniMenuOpen && (
-                            <div className="mt-1 ml-4 pl-4 border-l border-slate-200 space-y-1">
-                                {alumniLinks.map((link) => (
-                                    <Link 
-                                        key={link.path}
-                                        to={link.path}
-                                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive(link.path) ? 'bg-rose-50 text-rose-700 font-medium' : 'text-slate-600 hover:text-rose-600 hover:bg-slate-50'}`}
-                                    >
-                                        <span className={isActive(link.path) ? 'text-rose-600' : 'text-slate-400'}>
-                                            {link.icon}
-                                        </span>
-                                        {link.label}
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    )}
-
-                    {/* Annual Calendar Menu */}
-                    {canSeeCalendar && (
-                        <div className="pt-2">
-                        <button 
-                            onClick={() => setCalendarMenuOpen(!calendarMenuOpen)}
-                            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-                        >
-                            <div className="flex items-center gap-3">
-                                <Calendar className="w-5 h-5 text-fuchsia-600" />
-                                <span>Annual Calendar</span>
-                            </div>
-                            {calendarMenuOpen ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                        </button>
-                        
-                        {calendarMenuOpen && (
-                            <div className="mt-1 ml-4 pl-4 border-l border-slate-200 space-y-1">
-                                {calendarLinks.map((link) => (
-                                    <Link 
-                                        key={link.path}
-                                        to={link.path}
-                                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive(link.path) ? 'bg-fuchsia-50 text-fuchsia-700 font-medium' : 'text-slate-600 hover:text-fuchsia-600 hover:bg-slate-50'}`}
-                                    >
-                                        <span className={isActive(link.path) ? 'text-fuchsia-600' : 'text-slate-400'}>
-                                            {link.icon}
-                                        </span>
-                                        {link.label}
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    )}
-
-                    {/* Attendance Menu */}
-                    {canSeeAttendance && (
-                        <div className="pt-2">
-                        <button 
-                            onClick={() => setAttendanceMenuOpen(!attendanceMenuOpen)}
-                            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-                        >
-                            <div className="flex items-center gap-3">
-                                <CheckSquare className="w-5 h-5 text-teal-600" />
-                                <span>Attendance</span>
-                            </div>
-                            {attendanceMenuOpen ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                        </button>
-                        
-                        {attendanceMenuOpen && (
-                            <div className="mt-1 ml-4 pl-4 border-l border-slate-200 space-y-1">
-                                {attendanceLinks.map((link) => (
-                                    <Link 
-                                        key={link.path}
-                                        to={link.path}
-                                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive(link.path) ? 'bg-teal-50 text-teal-700 font-medium' : 'text-slate-600 hover:text-teal-600 hover:bg-slate-50'}`}
-                                    >
-                                        <span className={isActive(link.path) ? 'text-teal-600' : 'text-slate-400'}>
-                                            {link.icon}
-                                        </span>
-                                        {link.label}
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    )}
-
-                    {/* Communicate Menu */}
-                    {canSeeCommunicate && (
-                        <div className="pt-2">
-                        <button 
-                            onClick={() => setCommunicateMenuOpen(!communicateMenuOpen)}
-                            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-                        >
-                            <div className="flex items-center gap-3">
-                                <Megaphone className="w-5 h-5 text-purple-600" />
-                                <span>Communicate</span>
-                            </div>
-                            {communicateMenuOpen ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                        </button>
-                        
-                        {communicateMenuOpen && (
-                            <div className="mt-1 ml-4 pl-4 border-l border-slate-200 space-y-1">
-                                {communicateLinks.map((link) => (
-                                    <Link 
-                                        key={link.path}
-                                        to={link.path}
-                                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive(link.path) ? 'bg-purple-50 text-purple-700 font-medium' : 'text-slate-600 hover:text-purple-600 hover:bg-slate-50'}`}
-                                    >
-                                        <span className={isActive(link.path) ? 'text-purple-600' : 'text-slate-400'}>
-                                            {link.icon}
-                                        </span>
-                                        {link.label}
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    )}
-
-                    {/* Download Center Menu */}
-                    {canSeeDownload && (
-                        <div className="pt-2">
-                        <button 
-                            onClick={() => setDownloadMenuOpen(!downloadMenuOpen)}
-                            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-                        >
-                            <div className="flex items-center gap-3">
-                                <UploadCloud className="w-5 h-5 text-cyan-600" />
-                                <span>Download Center</span>
-                            </div>
-                            {downloadMenuOpen ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                        </button>
-                        
-                        {downloadMenuOpen && (
-                            <div className="mt-1 ml-4 pl-4 border-l border-slate-200 space-y-1">
-                                {downloadLinks.map((link) => (
-                                    <Link 
-                                        key={link.path}
-                                        to={link.path}
-                                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive(link.path) ? 'bg-cyan-50 text-cyan-700 font-medium' : 'text-slate-600 hover:text-cyan-600 hover:bg-slate-50'}`}
-                                    >
-                                        <span className={isActive(link.path) ? 'text-cyan-600' : 'text-slate-400'}>
-                                            {link.icon}
-                                        </span>
-                                        {link.label}
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    )}
-
-                    {/* Examinations Menu */}
-                    {canSeeExam && (
-                        <div className="pt-2">
-                        <button 
-                            onClick={() => setExamMenuOpen(!examMenuOpen)}
-                            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-                        >
-                            <div className="flex items-center gap-3">
-                                <BookOpenCheck className="w-5 h-5 text-orange-600" />
-                                <span>Examinations</span>
-                            </div>
-                            {examMenuOpen ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                        </button>
-                        
-                        {examMenuOpen && (
-                            <div className="mt-1 ml-4 pl-4 border-l border-slate-200 space-y-1">
-                                {examLinks.map((link) => (
-                                    <Link 
-                                        key={link.path}
-                                        to={link.path}
-                                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive(link.path) ? 'bg-orange-50 text-orange-700 font-medium' : 'text-slate-600 hover:text-orange-600 hover:bg-slate-50'}`}
-                                    >
-                                        <span className={isActive(link.path) ? 'text-orange-600' : 'text-slate-400'}>
-                                            {link.icon}
-                                        </span>
-                                        {link.label}
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    )}
-
-                    {/* Transport Menu */}
-                    {canSeeTransport && (
-                        <div className="pt-2">
-                        <button 
-                            onClick={() => setTransportMenuOpen(!transportMenuOpen)}
-                            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-                        >
-                            <div className="flex items-center gap-3">
-                                <Bus className="w-5 h-5 text-yellow-600" />
-                                <span>Transport</span>
-                            </div>
-                            {transportMenuOpen ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                        </button>
-                        
-                        {transportMenuOpen && (
-                            <div className="mt-1 ml-4 pl-4 border-l border-slate-200 space-y-1">
-                                {transportLinks.map((link) => (
-                                    <Link 
-                                        key={link.path}
-                                        to={link.path}
-                                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive(link.path) ? 'bg-yellow-50 text-yellow-700 font-medium' : 'text-slate-600 hover:text-yellow-600 hover:bg-slate-50'}`}
-                                    >
-                                        <span className={isActive(link.path) ? 'text-yellow-600' : 'text-slate-400'}>
-                                            {link.icon}
-                                        </span>
-                                        {link.label}
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    )}
-
-                    {/* System Setting Menu */}
-                    {canSeeSystem && (
-                        <div className="pt-2 pb-4 border-b border-slate-100">
-                            <button 
-                                onClick={() => setSystemMenuOpen(!systemMenuOpen)}
-                                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <Settings className="w-5 h-5 text-slate-600" />
-                                    <span>System Setting</span>
-                                </div>
-                                {systemMenuOpen ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                            </button>
-                            
-                            {systemMenuOpen && (
-                                <div className="mt-1 ml-4 pl-4 border-l border-slate-200 space-y-1">
-                                    {systemLinks.map((link) => (
-                                        <Link 
-                                            key={link.path}
-                                            to={link.path}
-                                            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive(link.path) ? 'bg-slate-100 text-slate-900 font-medium' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'}`}
-                                        >
-                                            <span className={isActive(link.path) ? 'text-slate-900' : 'text-slate-400'}>
-                                                {link.icon}
-                                            </span>
-                                            {link.label}
-                                        </Link>
-                                    ))}
-                                </div>
-                            )}
+                        <div className="px-4 py-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer">
+                          <p className="text-sm font-semibold text-slate-800 m-0">Server Backup</p>
+                          <p className="text-xs text-slate-500 mt-0.5 m-0">Daily database backup completed</p>
+                          <p className="text-[10px] text-slate-400 mt-1 m-0">4 hours ago</p>
                         </div>
-                    )}
+                        <div className="px-4 py-3 hover:bg-slate-50 cursor-pointer">
+                          <p className="text-sm font-semibold text-slate-800 m-0">Fee Collection</p>
+                          <p className="text-xs text-slate-500 mt-0.5 m-0">₹45,000 collected today</p>
+                          <p className="text-[10px] text-slate-400 mt-1 m-0">8 hours ago</p>
+                        </div>
+                      </div>
+                      <div className="px-4 py-2 border-t border-slate-100 text-center bg-slate-50">
+                        <span className="text-xs font-bold text-indigo-600 hover:text-indigo-700 cursor-pointer">View All Alerts</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-            </aside>
 
-            {/* Mobile Overlay */}
-            {sidebarOpen && (
-                <div 
-                    className="fixed inset-0 bg-slate-900/50 z-10 lg:hidden"
-                    onClick={() => setSidebarOpen(false)}
-                />
-            )}
+                {/* Messages */}
+                <button className="theme-bg-base theme-text-main" style={{ position: 'relative', background: '#f8fafc', border: '1.5px solid var(--sidebar-border)', borderRadius: 10, width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}>
+                    <MessageSquare className="w-4 h-4" />
+                    <span style={{ position: 'absolute', top: 7, right: 8, width: 7, height: 7, background: '#6366f1', borderRadius: '50%', border: '1.5px solid #fff' }} />
+                </button>
 
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col min-w-0">
-                <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
-                    <button 
-                        onClick={() => setSidebarOpen(true)}
-                        className="lg:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-lg"
-                    >
-                        <Menu className="w-5 h-5" />
+                {/* Profile dropdown */}
+                <div style={{ position: 'relative' }}>
+                    <button onClick={() => { setProfileOpen(v => !v); setNotifOpen(false); }} className="theme-bg-base theme-text-main"
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f8fafc', border: '1.5px solid var(--sidebar-border)', borderRadius: 10, padding: '6px 10px', cursor: 'pointer' }}>
+                        <div style={{ width: 28, height: 28, borderRadius: '50%', background: `linear-gradient(135deg,${accent},#8b5cf6)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff' }}>
+                            {user.email.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="hidden md:block" style={{ textAlign: 'left' }}>
+                            <div className="theme-text-main" style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{user.email.split('@')[0]}</div>
+                            <div style={{ fontSize: 10.5, fontWeight: 600, color: '#6366f1', textTransform: 'capitalize' }}>{user.role?.replace('_', ' ')}</div>
+                        </div>
                     </button>
-                    
-                    <div className="flex-1 max-w-xl px-4 hidden md:flex">
-                        <div className="relative w-full group">
-                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                            <input 
-                                type="text" 
-                                placeholder="Global search for students, staff, or settings..." 
-                                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white outline-none transition-all placeholder:text-slate-400"
-                            />
-                        </div>
-                    </div>
 
-                    <div className="flex items-center gap-4">
-                        <button className="relative p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors hidden sm:block">
-                            <Bell className="w-5 h-5" />
-                            <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 border-2 border-white rounded-full"></span>
-                        </button>
-                        
-                        <div className="hidden md:flex items-center gap-3 border-l border-slate-200 pl-4 ml-2">
-                            <div className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">
-                                {user.email.charAt(0).toUpperCase()}
+                    {profileOpen && (
+                        <div className="theme-bg-elevated theme-text-main" style={{
+                            position: 'absolute', right: 0, top: 'calc(100% + 8px)', background: '#fff',
+                            border: '1px solid var(--sidebar-border)', borderRadius: 14, boxShadow: '0 10px 40px rgba(0,0,0,0.12)',
+                            minWidth: 180, zIndex: 100, overflow: 'hidden'
+                        }}>
+                            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--sidebar-border)' }}>
+                                <div className="theme-text-main" style={{ fontSize: 13.5, fontWeight: 700, color: '#0f172a' }}>{user.email}</div>
+                                <div style={{ fontSize: 11.5, color: '#64748b', fontWeight: 500, marginTop: 2, textTransform: 'capitalize' }}>{user.role?.replace('_', ' ')}</div>
                             </div>
-                            <div className="flex flex-col text-left mr-2">
-                                <span className="text-sm font-bold text-slate-900">{user.email.split('@')[0]}</span>
-                                <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">{user.role.replace('_', ' ')}</span>
+                            <Link to="/settings/change-password"
+                                onClick={() => setProfileOpen(false)}
+                                className="theme-text-main"
+                                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', color: '#334155', fontSize: 13.5, fontWeight: 600, textDecoration: 'none' }}
+                                onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                            >
+                                <User className="w-4 h-4" style={{ color: '#6366f1' }} /> Profile &amp; Password
+                            </Link>
+                            <button onClick={() => { logout(); }}
+                                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', color: '#ef4444', fontSize: 13.5, fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontFamily: 'inherit', borderTop: '1px solid #f1f5f9' }}
+                                onMouseEnter={e => e.currentTarget.style.background = '#fef2f2'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                            >
+                                <LogOut className="w-4 h-4" /> Logout
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </header>
+
+            {/* ── BODY (Sidebar + Content) ── */}
+            <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+
+                {/* ── SIDEBAR ── */}
+                <aside className={`fixed md:relative z-30 h-full transition-all duration-300 ${sidebarOpen ? 'translate-x-0 w-[220px]' : '-translate-x-full md:translate-x-0 w-[64px]'}`} style={{
+                    background: '#0f172a',
+                    borderRight: '1px solid #1e293b', display: 'flex', flexDirection: 'column',
+                    overflow: 'hidden', flexShrink: 0
+                }}>
+                    <nav style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '10px 8px' }} className="sidebar-scrollbar">
+                        {sidebarItems.map(({ label, icon: Icon, path, subItems }) => {
+                            if (subItems) {
+                                const isExpanded = expandedMenus[label];
+                                const hasActiveChild = subItems.some(sub => isActive(sub.path));
+                                return (
+                                    <div key={label}>
+                                        <button onClick={() => { setSidebarOpen(true); toggleMenu(label); }}
+                                            title={!sidebarOpen ? label : ''}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: 11, width: '100%',
+                                                padding: sidebarOpen ? '10px 12px' : '10px 0',
+                                                justifyContent: sidebarOpen ? 'flex-start' : 'center',
+                                                borderRadius: 10, marginBottom: 3, textDecoration: 'none', border: 'none', cursor: 'pointer',
+                                                color: hasActiveChild ? '#fff' : '#64748b', fontWeight: hasActiveChild ? 700 : 500,
+                                                fontSize: 13.5, whiteSpace: 'nowrap', overflow: 'hidden',
+                                                background: hasActiveChild ? 'rgba(99,102,241,0.1)' : 'transparent',
+                                                transition: 'all 0.15s'
+                                            }}
+                                            onMouseEnter={e => { if (!hasActiveChild) { e.currentTarget.style.background = '#1e293b'; e.currentTarget.style.color = '#f1f5f9'; } }}
+                                            onMouseLeave={e => { if (!hasActiveChild) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; } }}
+                                        >
+                                            <Icon className="w-4 h-4" style={{ flexShrink: 0, color: hasActiveChild ? '#6366f1' : '#475569' }} />
+                                            {sidebarOpen && <span style={{ flex: 1, textAlign: 'left' }}>{label}</span>}
+                                            {sidebarOpen && <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} style={{ color: '#64748b' }} />}
+                                        </button>
+                                        {sidebarOpen && isExpanded && (
+                                            <div style={{ paddingLeft: 28, marginBottom: 6, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                                {subItems.map(sub => {
+                                                    const subActive = isActive(sub.path);
+                                                    return (
+                                                        <Link key={sub.path} to={sub.path} style={{
+                                                            fontSize: 12.5, color: subActive ? '#fff' : '#94a3b8', textDecoration: 'none',
+                                                            padding: '6px 10px', borderRadius: 6, background: subActive ? '#1e293b' : 'transparent',
+                                                            fontWeight: subActive ? 600 : 400
+                                                        }}
+                                                        onMouseEnter={e => { if (!subActive) { e.target.style.color = '#f8fafc'; e.target.style.background = '#1e293b50'; } }}
+                                                        onMouseLeave={e => { if (!subActive) { e.target.style.color = '#94a3b8'; e.target.style.background = 'transparent'; } }}
+                                                        >
+                                                            {sub.label}
+                                                        </Link>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            }
+
+                            const active = isActive(path);
+                            return (
+                                <Link key={path} to={path}
+                                    title={!sidebarOpen ? label : ''}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: 11,
+                                        padding: sidebarOpen ? '10px 12px' : '10px 0',
+                                        justifyContent: sidebarOpen ? 'flex-start' : 'center',
+                                        borderRadius: 10, marginBottom: 3, textDecoration: 'none',
+                                        color: active ? '#fff' : '#64748b', fontWeight: active ? 700 : 500,
+                                        fontSize: 13.5, whiteSpace: 'nowrap', overflow: 'hidden',
+                                        background: active ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'transparent',
+                                        boxShadow: active ? '0 4px 12px rgba(99,102,241,0.3)' : 'none',
+                                        transition: 'all 0.15s'
+                                    }}
+                                    onMouseEnter={e => { if (!active) { e.currentTarget.style.background = '#1e293b'; e.currentTarget.style.color = '#f1f5f9'; } }}
+                                    onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; } }}
+                                >
+                                    <Icon className="w-4 h-4" style={{ flexShrink: 0, color: active ? '#fff' : '#475569' }} />
+                                    {sidebarOpen && <span>{label}</span>}
+                                </Link>
+                            );
+                        })}
+                    </nav>
+
+                    {/* Sidebar Footer */}
+                    {sidebarOpen && (
+                        <div style={{ padding: '12px 8px', borderTop: '1px solid #1e293b' }}>
+                            <div style={{ background: '#1e293b', borderRadius: 10, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <div style={{ width: 32, height: 32, borderRadius: '50%', background: `linear-gradient(135deg,${accent},#8b5cf6)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
+                                    {user.email.charAt(0).toUpperCase()}
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 12.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.email.split('@')[0]}</div>
+                                    <div style={{ color: '#64748b', fontSize: 10.5, fontWeight: 600, textTransform: 'capitalize', marginTop: 1 }}>{user.role?.replace('_', ' ')}</div>
+                                </div>
                             </div>
                         </div>
-                        
-                        <button 
-                            onClick={() => { logout(); navigate('/'); }} 
-                            className="flex items-center justify-center w-10 h-10 text-slate-400 hover:text-white hover:bg-red-500 rounded-xl transition-all hover:shadow-lg hover:shadow-red-500/20"
-                            title="Logout"
-                        >
-                            <LogOut className="w-4 h-4" />
-                        </button>
-                    </div>
-                </header>
+                    )}
+                </aside>
 
-                <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+                {/* Mobile overlay */}
+                {sidebarOpen && (
+                    <div className="md:hidden fixed inset-0 z-20"
+                        style={{ background: 'rgba(15,23,42,0.5)' }}
+                        onClick={() => setSidebarOpen(false)} />
+                )}
+
+                {/* ── MAIN CONTENT ── */}
+                <main style={{ flex: 1, overflowY: 'auto', padding: '16px', WebkitOverflowScrolling: 'touch' }} className="md:p-6 w-full">
                     <Outlet />
                 </main>
             </div>

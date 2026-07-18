@@ -1,4 +1,4 @@
-import { Settings, Globe, Bell, MessageSquare, Smartphone, Mail, CreditCard, Printer, AlignCenter, Layout, Shield, Database, Languages, DollarSign, Blocks } from 'lucide-react';
+import { Settings, Globe, Bell, MessageSquare, Smartphone, Mail, CreditCard, Printer, AlignCenter, Layout, Shield, Database, Languages, DollarSign, Blocks, Server } from 'lucide-react';
 
 export const GeneralSettingsSchema = {
     title: "General Setting",
@@ -139,5 +139,23 @@ export const ModulesSchema = {
     schema: [
         { key: 'module_alumni', label: 'Alumni Module', type: 'select', options: [{label: 'Enable', value: 'true'}, {label: 'Disable', value: 'false'}] },
         { key: 'module_transport', label: 'Transport Module', type: 'select', options: [{label: 'Enable', value: 'true'}, {label: 'Disable', value: 'false'}] }
+    ]
+};
+
+export const SMTPSettingsSchema = {
+    title: "SMTP / Email Setting",
+    description: "Configure your outgoing mail server for sending notifications, reports, and alerts.",
+    icon: Server,
+    schema: [
+        { key: 'smtp_host', label: 'SMTP Host', required: true, placeholder: 'smtp.gmail.com' },
+        { key: 'smtp_port', label: 'SMTP Port', type: 'number', required: true, placeholder: '465 or 587' },
+        { key: 'smtp_username', label: 'SMTP Username', type: 'email', required: true, placeholder: 'school@example.com' },
+        { key: 'smtp_password', label: 'SMTP Password / App Password', type: 'password', required: true },
+        { key: 'smtp_security', label: 'Security Type', type: 'select', required: true, options: [
+            { label: 'SSL', value: 'ssl' },
+            { label: 'TLS', value: 'tls' },
+            { label: 'None', value: 'none' }
+        ]},
+        { key: 'sender_email', label: 'Default Sender Email', type: 'email', required: true, placeholder: 'noreply@school.com' }
     ]
 };
