@@ -27,6 +27,7 @@ app.use('/uploads', express.static('uploads'));
 
 app.use('/api/auth', require('./modules/auth/auth.route'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/payments', paymentsRouter);
 
 app.get('/', (req, res) => {

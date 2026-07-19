@@ -6,40 +6,11 @@ import api from '../api/axios';
 const months = ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'];
 const monthLabels = ['April', 'May', 'June', 'July', 'August', 'Sept', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'March'];
 
-const dummyFeeStructure = {
-    'Class 1': [
-        { type: 'Tuition Fee', apr: 1500, may: 1500, jun: 1500, jul: 1500, aug: 1500, sep: 1500, oct: 1500, nov: 1500, dec: 1500, jan: 1500, feb: 1500, mar: 1500 },
-        { type: 'Computer Fee', apr: 300, may: 300, jun: 300, jul: 300, aug: 300, sep: 300, oct: 300, nov: 300, dec: 300, jan: 300, feb: 300, mar: 300 },
-        { type: 'Annual Charges', apr: 5000, may: 0, jun: 0, jul: 0, aug: 0, sep: 0, oct: 0, nov: 0, dec: 0, jan: 0, feb: 0, mar: 0 },
-    ],
-    'Class 10': [
-        { type: 'Tuition Fee', apr: 2500, may: 2500, jun: 2500, jul: 2500, aug: 2500, sep: 2500, oct: 2500, nov: 2500, dec: 2500, jan: 2500, feb: 2500, mar: 2500 },
-        { type: 'Computer Fee', apr: 500, may: 500, jun: 500, jul: 500, aug: 500, sep: 500, oct: 500, nov: 500, dec: 500, jan: 500, feb: 500, mar: 500 },
-        { type: 'Lab Fee', apr: 800, may: 800, jun: 800, jul: 800, aug: 800, sep: 800, oct: 800, nov: 800, dec: 800, jan: 800, feb: 800, mar: 800 },
-        { type: 'Annual Charges', apr: 8000, may: 0, jun: 0, jul: 0, aug: 0, sep: 0, oct: 0, nov: 0, dec: 0, jan: 0, feb: 0, mar: 0 },
-    ]
-};
+const dummyFeeStructure = {};
 
-const dummyPaymentStatus = {
-    apr: 'Paid',
-    may: 'Paid',
-    jun: 'Paid',
-    jul: 'Pending',
-    aug: 'Pending',
-    sep: 'Pending',
-    oct: 'Upcoming',
-    nov: 'Upcoming',
-    dec: 'Upcoming',
-    jan: 'Upcoming',
-    feb: 'Upcoming',
-    mar: 'Upcoming'
-};
+const dummyPaymentStatus = {};
 
-const dummyNotices = [
-    { id: 1, title: 'Winter Vacation Scheduled', date: '20 Dec', desc: 'The school will remain closed for winter vacations starting from 25th Dec.', priority: 'High', type: 'Holiday' },
-    { id: 2, title: 'Half-Yearly Exams Finalized', date: '15 Oct', desc: 'Please download your exam routine from the calendar section. Practical exams start next week.', priority: 'Urgent', type: 'Academic' },
-    { id: 3, title: 'Science Fair Registration', date: '10 Oct', desc: 'Students interested in the upcoming science fair must register by this Friday.', priority: 'Normal', type: 'Event' }
-];
+const dummyNotices = [];
 
 const StudentDashboard = ({ activeTab = 'home' }) => {
     const { user } = useContext(AuthContext);
@@ -54,13 +25,7 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
     const [calendarMonth, setCalendarMonth] = useState('All');
 
     useEffect(() => {
-        if (user && user.class) {
-            setFeeData(dummyFeeStructure[user.class] || [
-                { type: 'Tuition Fee', apr: 2000, may: 2000, jun: 2000, jul: 2000, aug: 2000, sep: 2000, oct: 2000, nov: 2000, dec: 2000, jan: 2000, feb: 2000, mar: 2000 }
-            ]);
-        } else {
-            setFeeData(dummyFeeStructure['Class 10']); // default fallback
-        }
+        setFeeData([]);
     }, [user]);
 
     const handlePasswordChange = async (e) => {
@@ -385,13 +350,8 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                                 <option value="August">August</option>
                             </select>
                         </div>
-                        {[
-                            { month: 'April', present: 22, total: 24, percent: 91 },
-                            { month: 'May', present: 14, total: 15, percent: 93 },
-                            { month: 'June', present: 0, total: 0, percent: 100, label: 'Holiday' },
-                            { month: 'July', present: 24, total: 25, percent: 96 },
-                            { month: 'August', present: 19, total: 22, percent: 86 }
-                        ].filter(stat => attendanceMonth === 'All' || stat.month === attendanceMonth).map((stat, i) => (
+                        {[]
+                            .filter(stat => attendanceMonth === 'All' || stat.month === attendanceMonth).map((stat, i) => (
                             <div key={i} className="flex items-center gap-4">
                                 <div className="w-20 text-xs font-bold text-slate-600 uppercase tracking-widest text-right">
                                     {stat.month}
@@ -466,12 +426,7 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
-                                        {[
-                                            { subject: 'Mathematics', theory: 75, theoryMax: 80, practical: 17, pracMax: 20, grade: 'A1' },
-                                            { subject: 'Science', theory: 68, theoryMax: 80, practical: 20, pracMax: 20, grade: 'A2' },
-                                            { subject: 'English', theory: 72, theoryMax: 80, practical: 13, pracMax: 20, grade: 'B1' },
-                                            { subject: 'Computer Sci', theory: 40, theoryMax: 50, practical: 48, pracMax: 50, grade: 'A1' },
-                                        ].map((sub, i) => {
+                                        {[].map((sub, i) => {
                                             const total = sub.theory + sub.practical;
                                             const maxTotal = sub.theoryMax + sub.pracMax;
                                             return (
@@ -526,13 +481,7 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                     </div>
 
                     <div className="space-y-4">
-                        {[
-                            { date: '15', month: 'Oct', title: 'Diwali Holidays Begin', type: 'Holiday', icon: <CalendarDays className="w-4 h-4" /> },
-                            { date: '28', month: 'Oct', title: 'Science Exhibition', type: 'Event', icon: <User className="w-4 h-4" /> },
-                            { date: '05', month: 'Nov', title: 'Pre-Board Examinations', type: 'Exam', icon: <Clock className="w-4 h-4" /> },
-                            { date: '25', month: 'Dec', title: 'Winter Break Begins', type: 'Holiday', icon: <CalendarDays className="w-4 h-4" /> },
-                            { date: '12', month: 'Jan', title: 'Annual Sports Day', type: 'Event', icon: <User className="w-4 h-4" /> },
-                        ]
+                        {[]
                         .filter(event => calendarMonth === 'All' || event.month === calendarMonth)
                         .map((event, i) => (
                             <div key={i} className="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition-colors group">
@@ -571,11 +520,7 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                 </div>
                 
                 <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
-                    {[
-                        { date: 'Today, 2:30 PM', subject: 'Mathematics', title: 'Algebra Practice Set', desc: 'Complete chapters 4.1 to 4.3 in your workbook. Show all work.', teacher: 'Mr. Smith', status: 'Pending' },
-                        { date: 'Yesterday, 1:15 PM', subject: 'Science', title: 'Cell Structure Project', desc: 'Draw and label a plant cell on A4 paper.', teacher: 'Mrs. Davis', status: 'Completed' },
-                        { date: 'Monday, 10:00 AM', subject: 'English', title: 'Essay Writing', desc: 'Write a 500-word essay on climate change.', teacher: 'Ms. Taylor', status: 'Completed' }
-                    ].map((hw, i) => (
+                    {[].map((hw, i) => (
                         <div key={i} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
                             <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-slate-100 group-hover:bg-indigo-500 group-hover:text-white text-slate-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 transition-colors z-10">
                                 <BookText className="w-4 h-4" />
@@ -655,13 +600,7 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                         </div>
                         
                         <div className="grid grid-cols-5 gap-2">
-                            {[
-                                { date: 'Today', morning: 'Present', evening: 'Pending' },
-                                { date: 'Yesterday', morning: 'Present', evening: 'Present' },
-                                { date: '15 Nov', morning: 'Present', evening: 'Present' },
-                                { date: '14 Nov', morning: 'Absent', evening: 'Absent' },
-                                { date: '13 Nov', morning: 'Present', evening: 'Present' }
-                            ].map((day, idx) => (
+                            {[].map((day, idx) => (
                                 <div key={idx} className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
                                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">{day.date}</span>
                                     
@@ -682,7 +621,7 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
             )}
 
             {/* School Announcements Popup */}
-            {showPopup && (
+            {/* {showPopup && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
                     <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300">
                         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-indigo-500 to-purple-600"></div>
@@ -715,7 +654,7 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                         </div>
                     </div>
                 </div>
-            )}
+            )} */}
         </div>
     );
 };

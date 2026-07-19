@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useCollectFee } from './useFees';
 import { CreditCard, Printer, CheckCircle, Receipt, DollarSign, Sparkles, GraduationCap, ShieldCheck } from 'lucide-react';
 
-const CollectFeesView = () => {
+const CollectFeesView = ({ activeTab = 'collect' }) => {
   const [studentId, setStudentId] = useState('');
   const [studentName, setStudentName] = useState('');
   const [feeType, setFeeType] = useState('Tuition Fee');
@@ -80,6 +80,7 @@ const CollectFeesView = () => {
         </div>
       </div>
 
+      {activeTab === 'collect' && (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Cash Intake Desk Form */}
         <div className="lg:col-span-2 bg-slate-50/80 p-6 rounded-2xl border border-slate-200/80 space-y-4">
@@ -205,8 +206,9 @@ const CollectFeesView = () => {
           </div>
         </div>
       </div>
+      )}
 
-      {/* Recent Desk Log */}
+      {activeTab === 'receipts' && (
       <div className="space-y-3 pt-2">
         <h3 className="text-base font-extrabold text-slate-900">Shift Collection Log</h3>
         <div className="overflow-x-auto rounded-xl border border-slate-200">
@@ -240,6 +242,7 @@ const CollectFeesView = () => {
           </table>
         </div>
       </div>
+      )}
 
       {/* Printable Instant Receipt Modal */}
       {showReceiptModal && receiptData && (

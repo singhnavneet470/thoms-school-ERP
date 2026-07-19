@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useGetUsers, useCreateUser } from './useAdmin';
-import { Users, UserPlus, Shield, Search, CheckCircle, Trash2, Mail, Lock, Sparkles } from 'lucide-react';
+import { Users, UserPlus, Shield, Search, CheckCircle, Trash2, Mail, Lock, Sparkles, ChevronRight } from 'lucide-react';
 
 const AdminUserManagementView = () => {
+  const [activeTab, setActiveTab] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [email, setEmail] = useState('');
@@ -11,6 +13,7 @@ const AdminUserManagementView = () => {
   const [password, setPassword] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
+  const navigate = useNavigate();
   const { data: users = [] } = useGetUsers();
   const createUserMutation = useCreateUser();
 
@@ -38,22 +41,22 @@ const AdminUserManagementView = () => {
     }
   };
 
-  const mockUsers = [
-    { id: 1, email: 'admin@thoms.edu', full_name: 'Super Admin', role: 'admin', status: 'Active' },
-    { id: 2, email: 'teacher.math@thoms.edu', full_name: 'Sharma Sir', role: 'teacher', status: 'Active' },
-    { id: 3, email: 'student.aarav@thoms.edu', full_name: 'Aarav Sharma', role: 'student', status: 'Active' },
-    { id: 4, email: 'fees.counter@thoms.edu', full_name: 'Rajesh Desk', role: 'fees_collector', status: 'Active' },
-    { id: 5, email: 'accountant@thoms.edu', full_name: 'Priya Mehta', role: 'accountant', status: 'Active' },
-  ];
+  const displayUsers = users || [];
 
-  const displayUsers = users.length > 0 ? users : mockUsers;
-
-  const filteredUsers = displayUsers.filter(
-    (u) =>
+  const filteredUsers = displayUsers.filter((u) => {
+    const matchesSearch = 
       (u.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (u.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (u.role || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      (u.role || '').toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (!matchesSearch) return false;
+
+    if (activeTab === 'teachers') return u.role === 'teacher';
+    if (activeTab === 'students') return u.role === 'student';
+    if (activeTab === 'staff') return !['teacher', 'student', 'admin', 'super_admin'].includes(u.role);
+    if (activeTab === 'admins') return ['admin', 'super_admin'].includes(u.role);
+    return true; // 'all'
+  });
 
   const getRoleBadgeStyle = (userRole = '') => {
     const norm = userRole.toLowerCase();
@@ -64,6 +67,14 @@ const AdminUserManagementView = () => {
     if (norm.includes('accountant')) return 'bg-teal-50 text-teal-700 border-teal-200/80';
     return 'bg-slate-100 text-slate-700 border-slate-200';
   };
+
+  const tabs = [
+    { id: 'all', label: 'All Users' },
+    { id: 'teachers', label: 'Teachers' },
+    { id: 'students', label: 'Students' },
+    { id: 'staff', label: 'Other Staff' },
+    { id: 'admins', label: 'Admins' },
+  ];
 
   return (
     <div className="space-y-6">
@@ -97,7 +108,22 @@ const AdminUserManagementView = () => {
       )}
 
       {/* Control Filter Bar */}
-      <div className="flex items-center gap-4 bg-slate-50/80 p-3 rounded-2xl border border-slate-200/80">
+      <div className="flex flex-col md:flex-row md:items-center gap-4 bg-slate-50/80 p-3 rounded-2xl border border-slate-200/80">
+        <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-hide">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                activeTab === tab.id
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
           <input
@@ -124,7 +150,7 @@ const AdminUserManagementView = () => {
           </thead>
           <tbody className="divide-y divide-slate-100 bg-white">
             {filteredUsers.map((u) => (
-              <tr key={u.id} className="hover:bg-slate-50/80 transition">
+              <tr key={u.id} className="hover:bg-slate-50/80 transition cursor-pointer group" onClick={() => navigate(`/profile/${u.id}`)}>
                 <td className="px-4 py-3.5 font-bold text-slate-900 flex items-center gap-3">
                   <div className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center font-extrabold text-xs">
                     {(u.full_name || u.email || 'U').charAt(0).toUpperCase()}
@@ -143,9 +169,21 @@ const AdminUserManagementView = () => {
                   </span>
                 </td>
                 <td className="px-4 py-3.5 text-right">
-                  <button className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex justify-end gap-2 items-center">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); navigate(`/profile/${u.id}`); }}
+                      className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition"
+                      title="View Profile"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={(e) => e.stopPropagation()} 
+                      className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

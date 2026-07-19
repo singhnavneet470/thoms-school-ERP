@@ -5,13 +5,7 @@ import { Bus, MapPin, Phone, UserCheck, ShieldCheck } from 'lucide-react';
 const TransportView = () => {
   const { data: routes = [], isLoading } = useGetRoutes();
 
-  const mockRoutes = [
-    { id: 1, routeName: 'Route 1 - North Sector', busNumber: 'KA-01-E-1234', driver: 'Rajesh Kumar', phone: '+91 98765 43210', stops: 'Sector 4 -> Sector 11 -> School Main Gate', status: 'On Schedule' },
-    { id: 2, routeName: 'Route 2 - East Express', busNumber: 'KA-01-E-5678', driver: 'Suresh Babu', phone: '+91 98765 43211', stops: 'Metro Station -> Civil Lines -> School Main Gate', status: 'On Schedule' },
-    { id: 3, routeName: 'Route 3 - South Hub', busNumber: 'KA-01-E-9012', driver: 'Manoj Sharma', phone: '+91 98765 43212', stops: 'Green Park -> Lake View -> School West Gate', status: 'Maintenance' },
-  ];
-
-  const displayRoutes = routes.length > 0 ? routes : mockRoutes;
+  const displayRoutes = routes || [];
 
   return (
     <div className="space-y-6">

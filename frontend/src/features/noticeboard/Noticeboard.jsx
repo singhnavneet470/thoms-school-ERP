@@ -3,28 +3,9 @@ import useAuthStore from '../../store/authStore';
 import { ROLES } from '../../types/erp';
 import { PlusCircle, Archive, Megaphone } from 'lucide-react';
 
-const DUMMY_NOTICES = [
-  {
-    id: '1',
-    title: 'Welcome to the new ERP',
-    content: 'We have updated our school management system. Enjoy the new features!',
-    date: '2026-07-20',
-    author: 'System Admin',
-    isArchived: false,
-  },
-  {
-    id: '2',
-    title: 'Fee Collection Deadline',
-    content: 'Please ensure all fees for the current term are collected by end of month.',
-    date: '2026-07-22',
-    author: 'Accounts Dept',
-    isArchived: false,
-  }
-];
-
 const Noticeboard = () => {
   const user = useAuthStore((state) => state.user);
-  const [notices] = useState(DUMMY_NOTICES);
+  const [notices] = useState([]);
 
   const roleStr = user?.role ? String(user.role).toUpperCase().replace(/\s+/g, '_') : '';
   const canManageNotices = [ROLES.SUPERADMIN, ROLES.ADMIN].includes(roleStr);

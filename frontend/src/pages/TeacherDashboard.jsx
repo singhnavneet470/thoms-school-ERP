@@ -2,21 +2,13 @@ import React, { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { BookOpen, Users, CheckCircle, FileSpreadsheet, Award, CalendarDays, BookText, Settings } from 'lucide-react';
 
-const dummyClasses = [
-    { id: 1, name: 'Class 10 A', subject: 'English', role: 'Subject Teacher', period: '3rd Period' },
-    { id: 2, name: 'Class 9 B', subject: 'All', role: 'Class Teacher', period: 'N/A' }
-];
+const dummyClasses = [];
 
-const dummyStudents10A = [
-    { id: 101, name: 'Rahul Sharma', roll: '10A-01', englishMark: 85, attendance: 'Present' },
-    { id: 102, name: 'Sneha Patel', roll: '10A-02', englishMark: 92, attendance: 'Present' },
-    { id: 103, name: 'Aman Singh', roll: '10A-03', englishMark: 78, attendance: 'Absent' },
-    { id: 104, name: 'Priya Kumar', roll: '10A-04', englishMark: 88, attendance: 'Pending' },
-];
+const dummyStudents10A = [];
 
 const TeacherDashboard = () => {
     const { user } = useContext(AuthContext);
-    const [selectedClass, setSelectedClass] = useState(dummyClasses[0]);
+    const [selectedClass, setSelectedClass] = useState(dummyClasses[0] || {});
     const [activeTab, setActiveTab] = useState('marks'); // marks, homework, attendance
 
     return (

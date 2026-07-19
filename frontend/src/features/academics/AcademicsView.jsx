@@ -39,19 +39,9 @@ const AcademicsView = () => {
     }
   };
 
-  const mockStudents = [
-    { id: 101, name: 'Aarav Sharma', rollNo: '101' },
-    { id: 102, name: 'Ananya Gupta', rollNo: '102' },
-    { id: 103, name: 'Rohan Verma', rollNo: '103' },
-    { id: 104, name: 'Priya Singh', rollNo: '104' },
-  ];
-
-  const mockTimetable = [
-    { time: '09:00 AM - 09:45 AM', mon: 'Mathematics', tue: 'Physics', wed: 'Chemistry', thu: 'English', fri: 'Computer' },
-    { time: '09:45 AM - 10:30 AM', mon: 'Physics', tue: 'Mathematics', wed: 'English', thu: 'Chemistry', fri: 'Physical Ed' },
-    { time: '10:30 AM - 11:15 AM', mon: 'Chemistry', tue: 'English', wed: 'Mathematics', thu: 'Physics', fri: 'Biology' },
-    { time: '11:15 AM - 12:00 PM', mon: 'English', tue: 'Computer', wed: 'Physics', thu: 'Mathematics', fri: 'Chemistry' },
-  ];
+  // TODO: Fetch students and timetable from API
+  const mockStudents = [];
+  const mockTimetable = [];
 
   const getSubjectBadge = (subject) => {
     switch (subject) {

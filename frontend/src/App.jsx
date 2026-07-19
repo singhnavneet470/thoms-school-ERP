@@ -16,6 +16,7 @@ import TransportView from './features/transport/TransportView';
 import ReportsView from './features/reports/ReportsView';
 import AdminUserManagementView from './features/admin/AdminUserManagementView';
 import AdminSettingsView from './features/admin/AdminSettingsView';
+import UserProfileView from './features/users/UserProfileView';
 
 function App() {
   return (
@@ -51,6 +52,7 @@ function App() {
       <Route element={<ProtectedRoute allowedRoles={['*']} />}>
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<SuperAdminDashboard />} />
+          <Route path="/profile/:id" element={<UserProfileView />} />
 
           {/* Admin Feature Routes */}
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
@@ -83,14 +85,14 @@ function App() {
 
           {/* Fees Collector Feature Routes */}
           <Route element={<ProtectedRoute allowedRoles={['fees_collector', 'admin']} />}>
-            <Route path="/fees/collect" element={<CollectFeesView />} />
-            <Route path="/fees/receipts" element={<CollectFeesView />} />
+            <Route path="/fees/collect" element={<CollectFeesView activeTab="collect" />} />
+            <Route path="/fees/receipts" element={<CollectFeesView activeTab="receipts" />} />
           </Route>
 
           {/* Accountant Feature Routes */}
           <Route element={<ProtectedRoute allowedRoles={['accountant', 'admin']} />}>
-            <Route path="/accountant/overview" element={<ReportsView />} />
-            <Route path="/accountant/reports" element={<ReportsView />} />
+            <Route path="/accountant/overview" element={<ReportsView activeTab="ledger" />} />
+            <Route path="/accountant/reports" element={<ReportsView activeTab="reports" />} />
           </Route>
         </Route>
       </Route>

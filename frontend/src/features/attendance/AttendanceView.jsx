@@ -13,13 +13,8 @@ const AttendanceView = () => {
   const { data: fetchedAttendance = [] } = useGetAttendanceByDate(selectedDate);
   const saveAttendanceMutation = useSaveAttendance();
 
-  const mockStudents = [
-    { id: 101, name: 'Aarav Sharma', rollNo: '101', class: '10-A' },
-    { id: 102, name: 'Ananya Gupta', rollNo: '102', class: '10-A' },
-    { id: 103, name: 'Rohan Verma', rollNo: '103', class: '10-A' },
-    { id: 104, name: 'Priya Singh', rollNo: '104', class: '10-A' },
-    { id: 105, name: 'Kabir Patel', rollNo: '105', class: '10-A' },
-  ];
+  // TODO: Fetch students from API
+  const mockStudents = [];
 
   const handleStatusChange = (studentId, status) => {
     setAttendanceState((prev) => ({

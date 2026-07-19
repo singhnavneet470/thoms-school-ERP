@@ -2,20 +2,14 @@ import React, { useState } from 'react';
 import { useGetFinancialReport, useGetGlobalOverview } from './useReports';
 import { FileSpreadsheet, TrendingUp, DollarSign, Download, PieChart, ArrowUpRight, ArrowDownRight, Sparkles } from 'lucide-react';
 
-const ReportsView = () => {
+const ReportsView = ({ activeTab = 'ledger' }) => {
   const [filterType, setFilterType] = useState('All');
   const { data: financialData } = useGetFinancialReport();
   const { data: overviewData } = useGetGlobalOverview();
 
-  const mockLedger = [
-    { date: '2026-07-19', category: 'Tuition Fee Collection', type: 'Credit', amount: 45000, reference: 'BATCH-2026-07A' },
-    { date: '2026-07-18', category: 'Staff Payroll Disbursement', type: 'Debit', amount: 120000, reference: 'PAYROLL-JULY' },
-    { date: '2026-07-17', category: 'Transport Fuel & Maintenance', type: 'Debit', amount: 15400, reference: 'VOUCHER-881' },
-    { date: '2026-07-16', category: 'Examination Fee Intake', type: 'Credit', amount: 28500, reference: 'BATCH-2026-06B' },
-    { date: '2026-07-15', category: 'Library Book Acquisition', type: 'Debit', amount: 8200, reference: 'VOUCHER-879' },
-  ];
+  const ledgerData = financialData?.ledger || [];
 
-  const filteredLedger = mockLedger.filter((item) => {
+  const filteredLedger = ledgerData.filter((item) => {
     if (filterType === 'Credit') return item.type === 'Credit';
     if (filterType === 'Debit') return item.type === 'Debit';
     return true;
@@ -43,6 +37,7 @@ const ReportsView = () => {
       </div>
 
       {/* KPI Financial Overview Cards */}
+      {activeTab === 'reports' && (
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <div className="bg-gradient-to-br from-emerald-500/10 via-slate-50 to-slate-50 p-5 rounded-2xl border border-emerald-200/60 space-y-2">
           <div className="flex justify-between items-center text-slate-500">
@@ -81,8 +76,9 @@ const ReportsView = () => {
           </span>
         </div>
       </div>
+      )}
 
-      {/* Ledger Table Section */}
+      {activeTab === 'ledger' && (
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <h3 className="text-base font-extrabold text-slate-900">General Ledger Audit Log</h3>
@@ -156,6 +152,7 @@ const ReportsView = () => {
           </table>
         </div>
       </div>
+      )}
     </div>
   );
 };
