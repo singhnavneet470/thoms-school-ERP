@@ -6,40 +6,10 @@ import api from '../api/axios';
 const months = ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'];
 const monthLabels = ['April', 'May', 'June', 'July', 'August', 'Sept', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'March'];
 
-const dummyFeeStructure = {
-    'Class 1': [
-        { type: 'Tuition Fee', apr: 1500, may: 1500, jun: 1500, jul: 1500, aug: 1500, sep: 1500, oct: 1500, nov: 1500, dec: 1500, jan: 1500, feb: 1500, mar: 1500 },
-        { type: 'Computer Fee', apr: 300, may: 300, jun: 300, jul: 300, aug: 300, sep: 300, oct: 300, nov: 300, dec: 300, jan: 300, feb: 300, mar: 300 },
-        { type: 'Annual Charges', apr: 5000, may: 0, jun: 0, jul: 0, aug: 0, sep: 0, oct: 0, nov: 0, dec: 0, jan: 0, feb: 0, mar: 0 },
-    ],
-    'Class 10': [
-        { type: 'Tuition Fee', apr: 2500, may: 2500, jun: 2500, jul: 2500, aug: 2500, sep: 2500, oct: 2500, nov: 2500, dec: 2500, jan: 2500, feb: 2500, mar: 2500 },
-        { type: 'Computer Fee', apr: 500, may: 500, jun: 500, jul: 500, aug: 500, sep: 500, oct: 500, nov: 500, dec: 500, jan: 500, feb: 500, mar: 500 },
-        { type: 'Lab Fee', apr: 800, may: 800, jun: 800, jul: 800, aug: 800, sep: 800, oct: 800, nov: 800, dec: 800, jan: 800, feb: 800, mar: 800 },
-        { type: 'Annual Charges', apr: 8000, may: 0, jun: 0, jul: 0, aug: 0, sep: 0, oct: 0, nov: 0, dec: 0, jan: 0, feb: 0, mar: 0 },
-    ]
-};
-
-const dummyPaymentStatus = {
-    apr: 'Paid',
-    may: 'Paid',
-    jun: 'Paid',
-    jul: 'Pending',
-    aug: 'Pending',
-    sep: 'Pending',
-    oct: 'Upcoming',
-    nov: 'Upcoming',
-    dec: 'Upcoming',
-    jan: 'Upcoming',
-    feb: 'Upcoming',
-    mar: 'Upcoming'
-};
-
-const dummyNotices = [
-    { id: 1, title: 'Winter Vacation Scheduled', date: '20 Dec', desc: 'The school will remain closed for winter vacations starting from 25th Dec.', priority: 'High', type: 'Holiday' },
-    { id: 2, title: 'Half-Yearly Exams Finalized', date: '15 Oct', desc: 'Please download your exam routine from the calendar section. Practical exams start next week.', priority: 'Urgent', type: 'Academic' },
-    { id: 3, title: 'Science Fair Registration', date: '10 Oct', desc: 'Students interested in the upcoming science fair must register by this Friday.', priority: 'Normal', type: 'Event' }
-];
+import { useGetNotices } from '../features/notices/useNotices';
+import { useFeeHistory } from '../features/fees/useFees';
+import { useGetMarks, useGetTimetable } from '../features/academics/useAcademics';
+import { useGetStudentTransport } from '../features/transport/useTransport';
 
 const StudentDashboard = ({ activeTab = 'home' }) => {
     const { user } = useContext(AuthContext);
@@ -53,14 +23,23 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
     const [resultExam, setResultExam] = useState('Half-Yearly Examination');
     const [calendarMonth, setCalendarMonth] = useState('All');
 
+    const { data: noticesData } = useGetNotices();
+    const notices = noticesData?.data || [];
+    
+    const studentId = user?.student_id;
+    const classId = user?.class_id;
+
+    const { data: feesData } = useFeeHistory(studentId);
+    const { data: marksData } = useGetMarks(studentId);
+    const { data: timetableData } = useGetTimetable(classId);
+    const { data: transportData } = useGetStudentTransport(studentId);
+
+    const pendingFeesAmount = feesData?.data?.filter(f => f.status !== 'PAID').reduce((sum, f) => sum + Number(f.total_amount), 0) || 0;
+    const busStatus = transportData?.data ? 'Active' : 'Inactive';
+    const hasTransport = !!transportData?.data;
+
     useEffect(() => {
-        if (user && user.class) {
-            setFeeData(dummyFeeStructure[user.class] || [
-                { type: 'Tuition Fee', apr: 2000, may: 2000, jun: 2000, jul: 2000, aug: 2000, sep: 2000, oct: 2000, nov: 2000, dec: 2000, jan: 2000, feb: 2000, mar: 2000 }
-            ]);
-        } else {
-            setFeeData(dummyFeeStructure['Class 10']); // default fallback
-        }
+        // If feeData needed local state for some reason, we can set it here.
     }, [user]);
 
     const handlePasswordChange = async (e) => {
@@ -124,18 +103,18 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                         <Bell className="w-5 h-5 text-rose-500" />
                         Notice Board
                     </h2>
-                    <span className="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black uppercase tracking-widest">{dummyNotices.length} New</span>
+                    <span className="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black uppercase tracking-widest">{notices.length} New</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {dummyNotices.map(notice => (
+                    {notices.map(notice => (
                         <div key={notice.id} className="p-5 bg-white rounded-3xl border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-lg transition-shadow relative overflow-hidden group">
-                            <div className={`absolute top-0 left-0 w-1 h-full ${notice.priority === 'Urgent' ? 'bg-rose-500' : notice.priority === 'High' ? 'bg-orange-500' : 'bg-indigo-500'}`}></div>
+                            <div className={`absolute top-0 left-0 w-1 h-full ${notice.priority === 'High' ? 'bg-rose-500' : 'bg-indigo-500'}`}></div>
                             <div className="flex justify-between items-start mb-3">
-                                <span className={`px-2 py-1 text-[9px] font-black uppercase tracking-widest rounded shadow-sm ${notice.type === 'Holiday' ? 'bg-orange-50 text-orange-600' : notice.type === 'Academic' ? 'bg-fuchsia-50 text-fuchsia-600' : 'bg-sky-50 text-sky-600'}`}>{notice.type}</span>
-                                <span className="text-xs font-bold text-slate-400">{notice.date}</span>
+                                <span className={`px-2 py-1 text-[9px] font-black uppercase tracking-widest rounded shadow-sm bg-sky-50 text-sky-600`}>{notice.target_audience}</span>
+                                <span className="text-xs font-bold text-slate-400">{new Date(notice.publish_date).toLocaleDateString()}</span>
                             </div>
                             <h3 className="font-bold text-slate-800 text-sm mb-2 group-hover:text-indigo-600 transition-colors">{notice.title}</h3>
-                            <p className="text-xs text-slate-500 font-medium leading-relaxed">{notice.desc}</p>
+                            <p className="text-xs text-slate-500 font-medium leading-relaxed">{notice.content}</p>
                         </div>
                     ))}
                 </div>
@@ -163,14 +142,14 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                             <div className="p-2 bg-rose-50 text-rose-600 rounded-lg"><FileSpreadsheet className="w-5 h-5" /></div>
                             <h3 className="text-sm font-bold text-slate-500">Pending Fees</h3>
                         </div>
-                        <p className="text-2xl font-black text-slate-800">₹2,500</p>
+                        <p className="text-2xl font-black text-slate-800">₹{pendingFeesAmount}</p>
                     </div>
                     <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center">
                         <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 bg-teal-50 text-teal-600 rounded-lg"><Bus className="w-5 h-5" /></div>
                             <h3 className="text-sm font-bold text-slate-500">Bus Status</h3>
                         </div>
-                        <p className="text-2xl font-black text-slate-800">Active</p>
+                        <p className="text-2xl font-black text-slate-800">{busStatus}</p>
                     </div>
                 </div>
             )}
@@ -263,15 +242,15 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
-                                    {feeData.map(row => (
-                                        <tr key={row.type} className="hover:bg-slate-50/50 transition-colors">
-                                            <td className="py-3 px-4 text-xs font-bold text-slate-800 sticky left-0 bg-white shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] z-10">{row.type}</td>
+                                    {(feesData?.data || []).map(row => (
+                                        <tr key={row.id} className="hover:bg-slate-50/50 transition-colors">
+                                            <td className="py-3 px-4 text-xs font-bold text-slate-800 sticky left-0 bg-white shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] z-10">{row.category_name || `Fee ${row.id}`}</td>
                                             {months.map((month, mIdx) => (
-                                                <td key={month} className={`py-3 px-3 text-xs font-bold text-center ${row[month] > 0 ? getMonthColor(mIdx) : 'text-slate-300 bg-slate-50/30'}`}>
-                                                    {row[month] > 0 ? `₹${row[month]}` : '-'}
+                                                <td key={month} className={`py-3 px-3 text-xs font-bold text-center ${row.amount > 0 ? getMonthColor(mIdx) : 'text-slate-300 bg-slate-50/30'}`}>
+                                                    {mIdx === 0 ? `₹${row.total_amount}` : '-'}
                                                 </td>
                                             ))}
-                                            <td className="py-3 px-4 text-xs font-black text-white text-right bg-slate-800 border-l border-slate-700">₹{calculateTotal(row)}</td>
+                                            <td className="py-3 px-4 text-xs font-black text-white text-right bg-slate-800 border-l border-slate-700">₹{row.total_amount}</td>
                                         </tr>
                                     ))}
                                     {/* Grand Total Row */}
@@ -385,13 +364,8 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                                 <option value="August">August</option>
                             </select>
                         </div>
-                        {[
-                            { month: 'April', present: 22, total: 24, percent: 91 },
-                            { month: 'May', present: 14, total: 15, percent: 93 },
-                            { month: 'June', present: 0, total: 0, percent: 100, label: 'Holiday' },
-                            { month: 'July', present: 24, total: 25, percent: 96 },
-                            { month: 'August', present: 19, total: 22, percent: 86 }
-                        ].filter(stat => attendanceMonth === 'All' || stat.month === attendanceMonth).map((stat, i) => (
+                        {[]
+                            .filter(stat => attendanceMonth === 'All' || stat.month === attendanceMonth).map((stat, i) => (
                             <div key={i} className="flex items-center gap-4">
                                 <div className="w-20 text-xs font-bold text-slate-600 uppercase tracking-widest text-right">
                                     {stat.month}
@@ -466,27 +440,24 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
-                                        {[
-                                            { subject: 'Mathematics', theory: 75, theoryMax: 80, practical: 17, pracMax: 20, grade: 'A1' },
-                                            { subject: 'Science', theory: 68, theoryMax: 80, practical: 20, pracMax: 20, grade: 'A2' },
-                                            { subject: 'English', theory: 72, theoryMax: 80, practical: 13, pracMax: 20, grade: 'B1' },
-                                            { subject: 'Computer Sci', theory: 40, theoryMax: 50, practical: 48, pracMax: 50, grade: 'A1' },
-                                        ].map((sub, i) => {
-                                            const total = sub.theory + sub.practical;
-                                            const maxTotal = sub.theoryMax + sub.pracMax;
+                                        {(marksData?.data || []).map((sub, i) => {
+                                            const total = sub.marks_obtained;
+                                            const maxTotal = sub.max_marks || 100;
                                             return (
                                                 <tr key={i} className="hover:bg-slate-50 transition-colors">
-                                                    <td className="py-3 px-4 text-xs font-bold text-slate-700">{sub.subject}</td>
-                                                    <td className="py-3 px-4 text-xs font-medium text-slate-600 text-center">{sub.theory}/{sub.theoryMax}</td>
-                                                    <td className="py-3 px-4 text-xs font-medium text-slate-600 text-center">{sub.practical}/{sub.pracMax}</td>
+                                                    <td className="py-3 px-4 text-xs font-bold text-slate-700">{sub.subject_name}</td>
+                                                    <td className="py-3 px-4 text-xs font-medium text-slate-600 text-center">{total}/{maxTotal}</td>
+                                                    <td className="py-3 px-4 text-xs font-medium text-slate-600 text-center">-</td>
                                                     <td className="py-3 px-4 text-xs font-black text-slate-800 text-center">{total}/{maxTotal}</td>
-                                                    <td className="py-3 px-4 text-xs font-black text-fuchsia-600 text-right">{sub.grade}</td>
+                                                    <td className="py-3 px-4 text-xs font-black text-fuchsia-600 text-right">{sub.grade || 'A'}</td>
                                                 </tr>
                                             );
                                         })}
                                         <tr className="bg-slate-50 border-t-2 border-slate-200">
                                             <td colSpan="3" className="py-4 px-4 text-xs font-black text-slate-800 uppercase tracking-widest text-right">Overall Percentage</td>
-                                            <td colSpan="2" className="py-4 px-4 text-sm font-black text-fuchsia-600 text-right">89.5%</td>
+                                            <td colSpan="2" className="py-4 px-4 text-sm font-black text-fuchsia-600 text-right">
+                                                {marksData?.data?.length ? (marksData.data.reduce((sum, s) => sum + Number(s.marks_obtained), 0) / (marksData.data.length * 100) * 100).toFixed(1) + '%' : 'N/A'}
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -526,13 +497,7 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                     </div>
 
                     <div className="space-y-4">
-                        {[
-                            { date: '15', month: 'Oct', title: 'Diwali Holidays Begin', type: 'Holiday', icon: <CalendarDays className="w-4 h-4" /> },
-                            { date: '28', month: 'Oct', title: 'Science Exhibition', type: 'Event', icon: <User className="w-4 h-4" /> },
-                            { date: '05', month: 'Nov', title: 'Pre-Board Examinations', type: 'Exam', icon: <Clock className="w-4 h-4" /> },
-                            { date: '25', month: 'Dec', title: 'Winter Break Begins', type: 'Holiday', icon: <CalendarDays className="w-4 h-4" /> },
-                            { date: '12', month: 'Jan', title: 'Annual Sports Day', type: 'Event', icon: <User className="w-4 h-4" /> },
-                        ]
+                        {[]
                         .filter(event => calendarMonth === 'All' || event.month === calendarMonth)
                         .map((event, i) => (
                             <div key={i} className="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition-colors group">
@@ -571,11 +536,7 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                 </div>
                 
                 <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
-                    {[
-                        { date: 'Today, 2:30 PM', subject: 'Mathematics', title: 'Algebra Practice Set', desc: 'Complete chapters 4.1 to 4.3 in your workbook. Show all work.', teacher: 'Mr. Smith', status: 'Pending' },
-                        { date: 'Yesterday, 1:15 PM', subject: 'Science', title: 'Cell Structure Project', desc: 'Draw and label a plant cell on A4 paper.', teacher: 'Mrs. Davis', status: 'Completed' },
-                        { date: 'Monday, 10:00 AM', subject: 'English', title: 'Essay Writing', desc: 'Write a 500-word essay on climate change.', teacher: 'Ms. Taylor', status: 'Completed' }
-                    ].map((hw, i) => (
+                    {[].map((hw, i) => (
                         <div key={i} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
                             <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-slate-100 group-hover:bg-indigo-500 group-hover:text-white text-slate-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 transition-colors z-10">
                                 <BookText className="w-4 h-4" />
@@ -618,34 +579,40 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Bus Route Details */}
+                    {hasTransport ? (
                     <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col justify-center">
                         <div className="flex items-center gap-3 mb-4">
                             <MapPin className="w-5 h-5 text-teal-500" />
-                            <h3 className="font-bold text-slate-800 text-sm">Route #4: City Center Express</h3>
+                            <h3 className="font-bold text-slate-800 text-sm">Route #{transportData?.data?.route_id}: {transportData?.data?.route_name}</h3>
                         </div>
                         <div className="space-y-3">
                             <div className="flex justify-between items-center text-xs">
                                 <span className="font-medium text-slate-500">Pickup Point:</span>
-                                <span className="font-bold text-slate-800">Main Square (Sector 4)</span>
+                                <span className="font-bold text-slate-800">{transportData?.data?.stop_name}</span>
                             </div>
                             <div className="flex justify-between items-center text-xs">
                                 <span className="font-medium text-slate-500">Pickup Time (Morning):</span>
-                                <span className="font-bold text-teal-600">07:15 AM</span>
+                                <span className="font-bold text-teal-600">{transportData?.data?.pickup_time}</span>
                             </div>
                             <div className="flex justify-between items-center text-xs">
                                 <span className="font-medium text-slate-500">Drop Time (Afternoon):</span>
-                                <span className="font-bold text-orange-600">03:45 PM</span>
+                                <span className="font-bold text-orange-600">{transportData?.data?.drop_time}</span>
                             </div>
                             <div className="flex justify-between items-center text-xs pt-2 border-t border-slate-200">
                                 <span className="font-medium text-slate-500">Driver Name:</span>
-                                <span className="font-bold text-slate-800">Ramesh Kumar</span>
+                                <span className="font-bold text-slate-800">{transportData?.data?.driver_name || 'N/A'}</span>
                             </div>
                             <div className="flex justify-between items-center text-xs">
-                                <span className="font-medium text-slate-500">Driver Contact:</span>
-                                <span className="font-bold text-slate-800">+91 98765 43210</span>
+                                <span className="font-medium text-slate-500">Bus No:</span>
+                                <span className="font-bold text-slate-800">{transportData?.data?.bus_no || 'N/A'}</span>
                             </div>
                         </div>
                     </div>
+                    ) : (
+                    <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center">
+                        <p className="text-slate-500 font-bold">You are not opted-in for school transport.</p>
+                    </div>
+                    )}
 
                     {/* Bus Attendance / Live Tracking */}
                     <div className="lg:col-span-2 p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
@@ -655,13 +622,7 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                         </div>
                         
                         <div className="grid grid-cols-5 gap-2">
-                            {[
-                                { date: 'Today', morning: 'Present', evening: 'Pending' },
-                                { date: 'Yesterday', morning: 'Present', evening: 'Present' },
-                                { date: '15 Nov', morning: 'Present', evening: 'Present' },
-                                { date: '14 Nov', morning: 'Absent', evening: 'Absent' },
-                                { date: '13 Nov', morning: 'Present', evening: 'Present' }
-                            ].map((day, idx) => (
+                            {[].map((day, idx) => (
                                 <div key={idx} className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
                                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">{day.date}</span>
                                     
@@ -682,7 +643,7 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
             )}
 
             {/* School Announcements Popup */}
-            {showPopup && (
+            {/* {showPopup && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
                     <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300">
                         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-indigo-500 to-purple-600"></div>
@@ -715,7 +676,7 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                         </div>
                     </div>
                 </div>
-            )}
+            )} */}
         </div>
     );
 };

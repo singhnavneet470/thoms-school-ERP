@@ -80,7 +80,7 @@ const Layout = () => {
     <div className="min-h-screen bg-slate-50/80 flex flex-col font-sans">
       {/* Dynamic Glassmorphic Top Bar */}
       <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className=" mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -138,7 +138,7 @@ const Layout = () => {
       </header>
 
       {/* Main Body */}
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex gap-6">
+      <div className="flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex gap-6">
         {/* Mobile menu backdrop */}
         {mobileMenuOpen && (
           <div
@@ -150,11 +150,11 @@ const Layout = () => {
         {/* Navigation Sidebar */}
         <aside
           className={`
-          fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 p-4 transform transition-transform duration-300 ease-out md:static md:translate-x-0 md:border-r-0 md:bg-transparent md:p-0 md:w-60 flex-shrink-0
+          fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 p-4 transform transition-transform duration-300 ease-out md:sticky md:top-24 md:h-[calc(100vh-7rem)] md:translate-x-0 md:border-r-0 md:bg-transparent md:p-0 md:w-60 flex-shrink-0
           ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
         >
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-3 shadow-xs flex flex-col gap-1">
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-3 shadow-xs flex flex-col gap-1 h-full overflow-y-auto custom-scrollbar">
             <div className="px-3 py-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center justify-between">
               <span>Main Portal</span>
               <Sparkles className="w-3 h-3 text-indigo-500" />
@@ -187,15 +187,19 @@ const Layout = () => {
                 <Link to="/teacher/dashboard" className={navLinkClass('/teacher/dashboard')}>
                   <LayoutDashboard className="w-4 h-4" /> Dashboard
                 </Link>
-                <Link to="/teacher/attendance" className={navLinkClass('/teacher/attendance')}>
-                  <CalendarCheck className="w-4 h-4" /> Attendance Register
-                </Link>
-                <Link to="/teacher/academics" className={navLinkClass('/teacher/academics')}>
-                  <Award className="w-4 h-4" /> Marks & Grading
-                </Link>
-                <Link to="/teacher/timetable" className={navLinkClass('/teacher/timetable')}>
-                  <BookOpen className="w-4 h-4" /> Class Schedule
-                </Link>
+                {hasRole(['teacher']) && (
+                  <>
+                    <Link to="/teacher/attendance" className={navLinkClass('/teacher/attendance')}>
+                      <CalendarCheck className="w-4 h-4" /> Attendance Register
+                    </Link>
+                    <Link to="/teacher/academics" className={navLinkClass('/teacher/academics')}>
+                      <Award className="w-4 h-4" /> Marks & Grading
+                    </Link>
+                    <Link to="/teacher/timetable" className={navLinkClass('/teacher/timetable')}>
+                      <BookOpen className="w-4 h-4" /> Class Schedule
+                    </Link>
+                  </>
+                )}
               </>
             )}
 
@@ -208,44 +212,30 @@ const Layout = () => {
                 <Link to="/student/dashboard" className={navLinkClass('/student/dashboard')}>
                   <LayoutDashboard className="w-4 h-4" /> Personal Dashboard
                 </Link>
-                <Link to="/student/timetable" className={navLinkClass('/student/timetable')}>
-                  <BookOpen className="w-4 h-4" /> My Schedule
-                </Link>
-                <Link to="/student/academics" className={navLinkClass('/student/academics')}>
-                  <Award className="w-4 h-4" /> My Report Card
-                </Link>
-                <Link to="/student/transport" className={navLinkClass('/student/transport')}>
-                  <Bus className="w-4 h-4" /> Transport Tracking
-                </Link>
+                {hasRole(['student']) && (
+                  <>
+                    <Link to="/student/timetable" className={navLinkClass('/student/timetable')}>
+                      <BookOpen className="w-4 h-4" /> My Schedule
+                    </Link>
+                    <Link to="/student/academics" className={navLinkClass('/student/academics')}>
+                      <Award className="w-4 h-4" /> My Report Card
+                    </Link>
+                    <Link to="/student/transport" className={navLinkClass('/student/transport')}>
+                      <Bus className="w-4 h-4" /> Transport Tracking
+                    </Link>
+                  </>
+                )}
               </>
             )}
 
-            {/* Fees Collector Links */}
-            {hasRole(['fees_collector', 'admin']) && (
+            {/* Finance & Accounts Links */}
+            {hasRole(['fees_collector', 'accountant', 'admin']) && (
               <>
                 <div className="mt-3 px-3 py-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-                  Fee Intake Desk
+                  Finance & Accounts
                 </div>
-                <Link to="/fees/collect" className={navLinkClass('/fees/collect')}>
-                  <CreditCard className="w-4 h-4" /> Daily Collections
-                </Link>
-                <Link to="/fees/receipts" className={navLinkClass('/fees/receipts')}>
-                  <Receipt className="w-4 h-4" /> Official Receipt Logs
-                </Link>
-              </>
-            )}
-
-            {/* Accountant Links */}
-            {hasRole(['accountant', 'admin']) && (
-              <>
-                <div className="mt-3 px-3 py-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-                  Accounting Ledger
-                </div>
-                <Link to="/accountant/overview" className={navLinkClass('/accountant/overview')}>
-                  <FileSpreadsheet className="w-4 h-4" /> General Ledger
-                </Link>
-                <Link to="/accountant/reports" className={navLinkClass('/accountant/reports')}>
-                  <FileSpreadsheet className="w-4 h-4" /> Financial Reports
+                <Link to="/finance/dashboard" className={navLinkClass('/finance/dashboard')}>
+                  <CreditCard className="w-4 h-4" /> Finance Dashboard
                 </Link>
               </>
             )}
