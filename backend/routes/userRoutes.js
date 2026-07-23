@@ -6,6 +6,12 @@ const { verifyToken } = require('../middleware/auth');
 router.get('/:id/profile', verifyToken, async (req, res) => {
     try {
         const userId = req.params.id;
+        const isSelf = Number(req.user?.id) === Number(userId);
+        const isAdmin = ['admin', 'super_admin'].includes(req.user?.role);
+
+        if (!isSelf && !isAdmin) {
+            return res.status(403).json({ success: false, message: 'Access denied: Cannot view other user profiles' });
+        }
         
         // 1. Fetch base user info
         const [users] = await pool.query(
