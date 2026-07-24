@@ -7,6 +7,8 @@ const { attachTeacherContext } = require('../../middleware/teacherContext');
 const { ROLES } = require('../../config/constants');
 const svc = require('./marks.service');
 
+const { requireOwnStudentRecord } = require('../../middleware/studentOwnership');
+
 // Configure exam term weightages (Admin & Super Admin only)
 // App-layer validation: internal_1_weight + internal_2_weight + semester_weight MUST sum to 100.00%
 router.post(
@@ -28,7 +30,17 @@ router.post(
         });
       }
 
+      let resolvedSessionId = session_id ? Number(session_id) : null;
+      if (!resolvedSessionId) {
+        const [[activeSession]] = await pool.query('SELECT id FROM academic_sessions WHERE is_current = 1 LIMIT 1');
+        if (!activeSession) {
+          return res.status(400).json({ success: false, message: 'No active academic session found' });
+        }
+        resolvedSessionId = activeSession.id;
+      }
+
       const activeClassId = class_id ? Number(class_id) : null;
+      const resolvedHalfYear = half_year || 'H1';
 
       const [result] = await pool.query(
         `INSERT INTO exam_weightage (session_id, class_id, half_year, internal_1_weight, internal_2_weight, semester_weight)
@@ -37,7 +49,7 @@ router.post(
            internal_1_weight = VALUES(internal_1_weight),
            internal_2_weight = VALUES(internal_2_weight),
            semester_weight = VALUES(semester_weight)`,
-        [session_id || 1, activeClassId, half_year || 'H1', w1, w2, w3]
+        [resolvedSessionId, activeClassId, resolvedHalfYear, w1, w2, w3]
       );
 
       res.status(200).json({
@@ -99,12 +111,8 @@ router.get('/student/my-marks', verifyToken, authorize(ROLES.STUDENT), async (re
 });
 
 // Student views own report card for an exam (Self Student, Admin, Super Admin)
-router.get('/student/:studentId/exam/:examId', verifyToken, authorize(ROLES.STUDENT, ROLES.ADMIN, ROLES.SUPER_ADMIN), async (req, res) => {
+router.get('/student/:studentId/exam/:examId', verifyToken, authorize(ROLES.STUDENT, ROLES.ADMIN, ROLES.SUPER_ADMIN), requireOwnStudentRecord('studentId'), async (req, res) => {
   try {
-    if (req.user.role === ROLES.STUDENT) {
-      const [[owns]] = await pool.query('SELECT id FROM students WHERE id = ? AND user_id = ?', [req.params.studentId, req.user.id]);
-      if (!owns) return res.status(403).json({ success: false, message: 'Cannot view other student marks' });
-    }
     const rows = await svc.getStudentReport(req.params.studentId, req.params.examId);
     res.json({ success: true, data: rows });
   } catch (err) {
@@ -113,17 +121,13 @@ router.get('/student/:studentId/exam/:examId', verifyToken, authorize(ROLES.STUD
 });
 
 // Weighted half-year result (2 internals + semester)
-router.get('/student/:studentId/half-year/:halfYear', verifyToken, authorize(ROLES.STUDENT, ROLES.ADMIN, ROLES.SUPER_ADMIN), async (req, res) => {
+router.get('/student/:studentId/half-year/:halfYear', verifyToken, authorize(ROLES.STUDENT, ROLES.ADMIN, ROLES.SUPER_ADMIN), requireOwnStudentRecord('studentId'), async (req, res) => {
   try {
     const [[student]] = await pool.query(
       'SELECT s.session_id, sec.class_id, u.id AS user_id FROM students s JOIN users u ON s.user_id = u.id LEFT JOIN sections sec ON s.section_id = sec.id WHERE s.id = ?',
       [req.params.studentId]
     );
     if (!student) return res.status(404).json({ success: false, message: 'Student not found' });
-
-    if (req.user.role === ROLES.STUDENT && student.user_id !== req.user.id) {
-      return res.status(403).json({ success: false, message: 'Cannot view other student marks' });
-    }
 
     const rows = await svc.getHalfYearResult(req.params.studentId, student.session_id, req.params.halfYear, student.class_id);
     res.json({ success: true, data: rows });
@@ -133,12 +137,8 @@ router.get('/student/:studentId/half-year/:halfYear', verifyToken, authorize(ROL
 });
 
 // All marks for a student
-router.get('/student/:studentId', verifyToken, authorize(ROLES.STUDENT, ROLES.ADMIN, ROLES.SUPER_ADMIN), async (req, res) => {
+router.get('/student/:studentId', verifyToken, authorize(ROLES.STUDENT, ROLES.ADMIN, ROLES.SUPER_ADMIN), requireOwnStudentRecord('studentId'), async (req, res) => {
   try {
-    if (req.user.role === ROLES.STUDENT) {
-      const [[owns]] = await pool.query('SELECT id FROM students WHERE id = ? AND user_id = ?', [req.params.studentId, req.user.id]);
-      if (!owns) return res.status(403).json({ success: false, message: 'Cannot view other student marks' });
-    }
     const [rows] = await pool.query(`
       SELECT m.*, s.name as subject_name, e.name as exam_name
       FROM marks m

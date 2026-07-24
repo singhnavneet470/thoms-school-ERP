@@ -61,7 +61,7 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
       setTimetable(ttRes.data?.data || []);
     } catch (err) {
       console.error('Failed to load student dashboard data:', err);
-    } fontFinally: {
+    } finally {
       setLoading(false);
     }
   };
@@ -76,17 +76,20 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
     }
 
     try {
-      const response = await api.put('/auth/change-password', { newPassword });
+      const response = await api.put('/auth/change-password', { currentPassword: '', newPassword });
       setMessage(response.data.message || 'Password updated successfully!');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to update password');
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to update password');
     }
   };
 
-  // Determine overall fee status badge
-  const pendingAmount = fees.filter(f => f.status !== 'PAID' && f.status !== 'captured').reduce((acc, f) => acc + (f.amount || 0), 0);
+  // Determine overall fee status badge from fee records
+  const pendingAmount = fees.reduce((acc, f) => {
+    const due = f.due_amount !== undefined ? Number(f.due_amount) : (Number(f.total_amount || 0) - Number(f.paid_amount || 0));
+    return acc + Math.max(0, due);
+  }, 0);
   const feeStatusBadge = pendingAmount === 0 ? 'PAID' : pendingAmount > 5000 ? 'OVERDUE' : 'PENDING';
 
   return (
@@ -294,29 +297,39 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 text-slate-500 font-extrabold uppercase text-[10px] tracking-wider border-b border-slate-200">
                 <tr>
-                  <th className="py-3 px-4">Transaction / Receipt No</th>
-                  <th className="py-3 px-4">Date</th>
-                  <th className="py-3 px-4">Method</th>
-                  <th className="py-3 px-4 text-right">Amount</th>
+                  <th className="py-3 px-4">Category</th>
+                  <th className="py-3 px-4">Due Date</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4 text-right">Paid / Total Amount</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
                 {fees.length === 0 ? (
                   <tr>
                     <td colSpan="4" className="py-4 text-center text-slate-400 font-medium">
-                      No recent transaction history recorded.
+                      No fee records found.
                     </td>
                   </tr>
                 ) : (
                   fees.map((f, idx) => (
                     <tr key={idx} className="hover:bg-slate-50/60">
-                      <td className="py-3 px-4 font-mono font-bold text-slate-800">{f.razorpay_payment_id || `TXN-${f.id || idx}`}</td>
+                      <td className="py-3 px-4 font-bold text-slate-800">{f.category_name || f.name || `Fee Record #${f.id || idx + 1}`}</td>
                       <td className="py-3 px-4 text-slate-600">
-                        {f.captured_at ? new Date(f.captured_at).toLocaleDateString() : 'Recent'}
+                        {f.due_date ? new Date(f.due_date).toLocaleDateString() : 'N/A'}
                       </td>
-                      <td className="py-3 px-4 font-bold text-slate-700">{f.method || 'Card / UPI'}</td>
-                      <td className="py-3 px-4 text-right font-black text-emerald-600">
-                        +₹{((f.amount_paise || 0) / 100).toLocaleString()}
+                      <td className="py-3 px-4 font-extrabold uppercase text-[10px]">
+                        <span className={`px-2 py-0.5 rounded ${
+                          f.status === 'PAID'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : f.status === 'PARTIAL'
+                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                            : 'bg-rose-50 text-rose-700 border border-rose-200'
+                        }`}>
+                          {f.status || 'PENDING'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right font-black text-slate-800">
+                        ₹{Number(f.paid_amount || 0).toLocaleString()} / ₹{Number(f.total_amount || 0).toLocaleString()}
                       </td>
                     </tr>
                   ))

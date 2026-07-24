@@ -74,6 +74,23 @@ router.get('/:id', verifyToken, async (req, res) => {
     if (!notice) {
       return res.status(404).json({ success: false, message: 'Notice not found' });
     }
+
+    const isAdmin = [ROLES.SUPER_ADMIN, ROLES.ADMIN].includes(req.user.role);
+    if (!isAdmin) {
+      if (!notice.is_published) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+      if (notice.target_role && notice.target_role !== req.user.role) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+      if (req.user.role === ROLES.STUDENT && notice.target_section_id) {
+        const [[student]] = await pool.query('SELECT section_id FROM students WHERE user_id = ?', [req.user.id]);
+        if (student?.section_id !== notice.target_section_id) {
+          return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+      }
+    }
+
     res.json({ success: true, data: notice });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -119,10 +136,14 @@ router.put('/:id', verifyToken, authorize(ROLES.SUPER_ADMIN, ROLES.ADMIN), async
       return res.status(400).json({ success: false, message: 'Title and content are required' });
     }
 
-    const [[existing]] = await pool.query('SELECT id FROM notices WHERE id = ?', [req.params.id]);
+    const [[existing]] = await pool.query('SELECT id, is_published, publish_date, expiry_date FROM notices WHERE id = ?', [req.params.id]);
     if (!existing) {
       return res.status(404).json({ success: false, message: 'Notice not found' });
     }
+
+    const updatedIsPublished = is_published !== undefined ? (is_published ? 1 : 0) : existing.is_published;
+    const updatedPublishDate = publish_date !== undefined ? publish_date : (existing.publish_date ? new Date(existing.publish_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+    const updatedExpiryDate = expiry_date !== undefined ? expiry_date : (existing.expiry_date ? new Date(existing.expiry_date).toISOString().split('T')[0] : null);
 
     await pool.query(
       `UPDATE notices 
@@ -136,9 +157,9 @@ router.put('/:id', verifyToken, authorize(ROLES.SUPER_ADMIN, ROLES.ADMIN), async
         target_role || null,
         target_roles ? JSON.stringify(target_roles) : null,
         target_section_id || null,
-        is_published !== undefined ? (is_published ? 1 : 0) : 1,
-        publish_date || new Date().toISOString().split('T')[0],
-        expiry_date || null,
+        updatedIsPublished,
+        updatedPublishDate,
+        updatedExpiryDate,
         req.params.id,
       ]
     );

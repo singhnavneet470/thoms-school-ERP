@@ -5,11 +5,15 @@
 -- (e.g. fee confirmations, homework deadlines, attendance alerts) alongside notice-derived alerts.
 
 -- 1. Migrate & Narrow `users.role` ENUM
+CREATE TABLE IF NOT EXISTS `_orphaned_users_role_backup` AS 
+SELECT * FROM `users` WHERE `role` IN ('principal', 'vp', 'receptionist');
 UPDATE `users` SET `role` = 'admin' WHERE `role` IN ('principal', 'vp', 'receptionist');
 ALTER TABLE `users` MODIFY COLUMN `role` ENUM('super_admin', 'admin', 'cashier', 'teacher', 'busstaff', 'student') NOT NULL DEFAULT 'student';
 
 -- 2. Migrate & Narrow `exams.exam_type` ENUM
 -- Mapping: unit_test -> internal_1, mid_term/practical -> internal_2, final -> semester
+CREATE TABLE IF NOT EXISTS `_orphaned_exams_type_backup` AS 
+SELECT * FROM `exams` WHERE `exam_type` IN ('unit_test', 'mid_term', 'practical', 'final');
 UPDATE `exams` SET `exam_type` = 'internal_1' WHERE `exam_type` = 'unit_test';
 UPDATE `exams` SET `exam_type` = 'internal_2' WHERE `exam_type` IN ('mid_term', 'practical');
 UPDATE `exams` SET `exam_type` = 'semester' WHERE `exam_type` = 'final';
@@ -45,26 +49,38 @@ CREATE TABLE IF NOT EXISTS `notifications` (
   INDEX `idx_notifications_created` (`created_at`)
 ) ENGINE=InnoDB;
 
--- 7. Add Explicit ON DELETE Safety Rules for Foreign Keys
+-- 7. Add Explicit ON DELETE Safety Rules for Foreign Keys (with orphan cleanup)
+UPDATE `attendance` SET `marked_by` = NULL WHERE `marked_by` IS NOT NULL AND `marked_by` NOT IN (SELECT `id` FROM `users`);
 ALTER TABLE `attendance` MODIFY COLUMN `marked_by` INT DEFAULT NULL COMMENT 'teacher user_id';
 ALTER TABLE `attendance` ADD CONSTRAINT `fk_attendance_marked_by` FOREIGN KEY (`marked_by`) REFERENCES `users`(`id`) ON DELETE SET NULL;
 
+UPDATE `homework` SET `assigned_by` = NULL WHERE `assigned_by` IS NOT NULL AND `assigned_by` NOT IN (SELECT `id` FROM `users`);
 ALTER TABLE `homework` MODIFY COLUMN `assigned_by` INT DEFAULT NULL COMMENT 'teacher user_id';
 ALTER TABLE `homework` ADD CONSTRAINT `fk_homework_assigned_by` FOREIGN KEY (`assigned_by`) REFERENCES `users`(`id`) ON DELETE SET NULL;
 
+UPDATE `timetables` SET `teacher_user_id` = NULL WHERE `teacher_user_id` IS NOT NULL AND `teacher_user_id` NOT IN (SELECT `id` FROM `users`);
 ALTER TABLE `timetables` MODIFY COLUMN `teacher_user_id` INT DEFAULT NULL;
 ALTER TABLE `timetables` ADD CONSTRAINT `fk_timetables_teacher` FOREIGN KEY (`teacher_user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL;
 
+UPDATE `marks` SET `entered_by` = NULL WHERE `entered_by` IS NOT NULL AND `entered_by` NOT IN (SELECT `id` FROM `users`);
 ALTER TABLE `marks` MODIFY COLUMN `entered_by` INT DEFAULT NULL COMMENT 'teacher user_id';
 ALTER TABLE `marks` ADD CONSTRAINT `fk_marks_entered_by` FOREIGN KEY (`entered_by`) REFERENCES `users`(`id`) ON DELETE SET NULL;
 
+CREATE TABLE IF NOT EXISTS `_orphaned_receipts_student_backup` AS 
+SELECT * FROM `receipts` WHERE `student_id` NOT IN (SELECT `id` FROM `students`);
+DELETE FROM `receipts` WHERE `student_id` NOT IN (SELECT `id` FROM `students`);
 ALTER TABLE `receipts` ADD CONSTRAINT `fk_receipts_student` FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON DELETE RESTRICT;
 
+UPDATE `homework_submissions` SET `marked_by` = NULL WHERE `marked_by` IS NOT NULL AND `marked_by` NOT IN (SELECT `id` FROM `users`);
 ALTER TABLE `homework_submissions` MODIFY COLUMN `marked_by` INT DEFAULT NULL COMMENT 'teacher user_id';
 ALTER TABLE `homework_submissions` ADD CONSTRAINT `fk_homework_submissions_marked_by` FOREIGN KEY (`marked_by`) REFERENCES `users`(`id`) ON DELETE SET NULL;
 
+CREATE TABLE IF NOT EXISTS `_orphaned_student_transport_session_backup` AS 
+SELECT * FROM `student_transport` WHERE `session_id` NOT IN (SELECT `id` FROM `academic_sessions`);
+DELETE FROM `student_transport` WHERE `session_id` NOT IN (SELECT `id` FROM `academic_sessions`);
 ALTER TABLE `student_transport` ADD CONSTRAINT `fk_student_transport_session` FOREIGN KEY (`session_id`) REFERENCES `academic_sessions`(`id`) ON DELETE CASCADE;
 
+UPDATE `refunds` SET `initiated_by` = NULL WHERE `initiated_by` IS NOT NULL AND `initiated_by` NOT IN (SELECT `id` FROM `users`);
 ALTER TABLE `refunds` MODIFY COLUMN `initiated_by` INT DEFAULT NULL;
 ALTER TABLE `refunds` ADD CONSTRAINT `fk_refunds_initiated_by` FOREIGN KEY (`initiated_by`) REFERENCES `users`(`id`) ON DELETE SET NULL;
 
@@ -76,12 +92,12 @@ DELETE FROM `razorpay_payments` WHERE `razorpay_order_id` NOT IN (SELECT `razorp
 ALTER TABLE `razorpay_payments` ADD CONSTRAINT `fk_rp_payments_order` FOREIGN KEY (`razorpay_order_id`) REFERENCES `razorpay_orders`(`razorpay_order_id`) ON DELETE RESTRICT;
 
 CREATE TABLE IF NOT EXISTS `_orphaned_receipts_backup` AS 
-SELECT * FROM `receipts` WHERE `razorpay_payment_id` IS NOT NULL AND `razorpay_payment_id` NOT IN (SELECT `razorpay_payment_id` FROM `razorpay_payments`);
-DELETE FROM `receipts` WHERE `razorpay_payment_id` IS NOT NULL AND `razorpay_payment_id` NOT IN (SELECT `razorpay_payment_id` FROM `razorpay_payments`);
+SELECT * FROM `receipts` WHERE `razorpay_payment_id` IS NOT NULL AND `razorpay_payment_id` NOT IN (SELECT `razorpay_payment_id` FROM `razorpay_payments` WHERE `razorpay_payment_id` IS NOT NULL);
+DELETE FROM `receipts` WHERE `razorpay_payment_id` IS NOT NULL AND `razorpay_payment_id` NOT IN (SELECT `razorpay_payment_id` FROM `razorpay_payments` WHERE `razorpay_payment_id` IS NOT NULL);
 
 CREATE TABLE IF NOT EXISTS `_orphaned_refunds_backup` AS 
-SELECT * FROM `refunds` WHERE `razorpay_payment_id` IS NOT NULL AND `razorpay_payment_id` NOT IN (SELECT `razorpay_payment_id` FROM `razorpay_payments`);
-DELETE FROM `refunds` WHERE `razorpay_payment_id` IS NOT NULL AND `razorpay_payment_id` NOT IN (SELECT `razorpay_payment_id` FROM `razorpay_payments`);
+SELECT * FROM `refunds` WHERE `razorpay_payment_id` IS NOT NULL AND `razorpay_payment_id` NOT IN (SELECT `razorpay_payment_id` FROM `razorpay_payments` WHERE `razorpay_payment_id` IS NOT NULL);
+DELETE FROM `refunds` WHERE `razorpay_payment_id` IS NOT NULL AND `razorpay_payment_id` NOT IN (SELECT `razorpay_payment_id` FROM `razorpay_payments` WHERE `razorpay_payment_id` IS NOT NULL);
 
 ALTER TABLE `receipts` ADD CONSTRAINT `fk_receipts_payment` FOREIGN KEY (`razorpay_payment_id`) REFERENCES `razorpay_payments`(`razorpay_payment_id`) ON DELETE RESTRICT;
 ALTER TABLE `refunds` ADD CONSTRAINT `fk_refunds_payment` FOREIGN KEY (`razorpay_payment_id`) REFERENCES `razorpay_payments`(`razorpay_payment_id`) ON DELETE RESTRICT;

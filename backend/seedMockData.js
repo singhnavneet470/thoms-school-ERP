@@ -1,6 +1,7 @@
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
-require('d:/thoms-school-ERP/backend/node_modules/dotenv').config({ path: 'd:/thoms-school-ERP/backend/.env' });
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 async function seed() {
   try {
@@ -109,10 +110,10 @@ async function seed() {
     await connection.query("INSERT IGNORE INTO subjects (name, code, class_id, max_marks, pass_marks) VALUES ('Science', 'SCI-10', ?, 100, 35)", [classId]);
     await connection.query("INSERT IGNORE INTO subjects (name, code, class_id, max_marks, pass_marks) VALUES ('English', 'ENG-10', ?, 100, 35)", [classId]);
 
-    let [subjRows] = await connection.query("SELECT id FROM subjects WHERE class_id = ?", [classId]);
-    const mathId = subjRows[0]?.id;
-    const sciId = subjRows[1]?.id;
-    const engId = subjRows[2]?.id;
+    let [subjRows] = await connection.query("SELECT id, name FROM subjects WHERE class_id = ?", [classId]);
+    const mathId = subjRows.find(s => s.name === 'Mathematics')?.id;
+    const sciId = subjRows.find(s => s.name === 'Science')?.id;
+    const engId = subjRows.find(s => s.name === 'English')?.id;
 
     // 10. Teacher assignments (Teacher 1 is Class Teacher of Section A)
     if (mathId && sciId && engId) {
@@ -138,7 +139,7 @@ async function seed() {
     // 11. Exam Weightage (20% + 20% + 60% = 100%)
     await connection.query(`
       INSERT INTO exam_weightage (session_id, class_id, half_year, internal_1_weight, internal_2_weight, semester_weight)
-      VALUES (?, NULL, 'H1', 20.00, 20.00, 60.00)
+      VALUES (?, 0, 'H1', 20.00, 20.00, 60.00)
       ON DUPLICATE KEY UPDATE internal_1_weight=20.00, internal_2_weight=20.00, semester_weight=60.00
     `, [sessionId]);
 

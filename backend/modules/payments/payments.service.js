@@ -245,14 +245,16 @@ const collectCashPayment = async ({ studentId, feeRecordId, amount, paymentMode 
       [newPaidAmount, newStatus, resolvedFeeRecord.id]
     );
 
-    const orderId = `cash_ord_${Date.now()}`;
-    const paymentId = `cash_pay_${Date.now()}`;
+    const crypto = require('crypto');
+    const nonce = crypto.randomBytes(4).toString('hex');
+    const orderId = `cash_ord_${Date.now()}_${nonce}`;
+    const paymentId = `cash_pay_${Date.now()}_${nonce}`;
     const amountPaise = Math.round(payAmount * 100);
 
     await conn.query(
       `INSERT INTO razorpay_orders (razorpay_order_id, fee_record_id, student_id, amount_paise, currency, receipt, status, created_by)
        VALUES (?, ?, ?, ?, 'INR', ?, 'paid', ?)`,
-      [orderId, resolvedFeeRecord.id, resolvedFeeRecord.student_id, amountPaise, `cash_${Date.now()}`, collectedByUserId]
+      [orderId, resolvedFeeRecord.id, resolvedFeeRecord.student_id, amountPaise, `cash_${Date.now()}_${nonce}`, collectedByUserId]
     );
 
     await conn.query(
@@ -261,7 +263,7 @@ const collectCashPayment = async ({ studentId, feeRecordId, amount, paymentMode 
       [paymentId, orderId, amountPaise, paymentMode]
     );
 
-    const receiptNo = `REC-${Math.floor(100000 + Math.random() * 900000)}`;
+    const receiptNo = `REC-${Date.now().toString().slice(-6)}${Math.floor(1000 + Math.random() * 9000)}`;
     await conn.query(
       `INSERT INTO receipts (receipt_no, razorpay_payment_id, fee_record_id, student_id)
        VALUES (?, ?, ?, ?)`,

@@ -46,10 +46,30 @@ const Noticeboard = () => {
     notice_type: 'general',
     type: 'global',
     target_role: '',
+    target_section_id: '',
     publish_date: new Date().toISOString().split('T')[0],
     expiry_date: '',
     is_published: 1,
   });
+  const [sections, setSections] = useState([]);
+
+  React.useEffect(() => {
+    if (isAdmin) {
+      import('../../api/axios').then(({ default: api }) => {
+        api.get('/admin/classes')
+          .then((res) => {
+            if (res.data?.data) {
+              const secList = res.data.data.filter(s => s.section_id).map(s => ({
+                id: s.section_id,
+                name: `${s.class_name || ''} ${s.section_name || ''}`.trim()
+              }));
+              setSections(secList);
+            }
+          })
+          .catch(() => {});
+      });
+    }
+  }, [isAdmin]);
 
   const notices = isAdmin ? (adminNoticesData?.data || []) : (publicNoticesData?.data || []);
   const isLoading = isAdmin ? adminLoading : publicLoading;
@@ -62,6 +82,7 @@ const Noticeboard = () => {
       notice_type: 'general',
       type: 'global',
       target_role: '',
+      target_section_id: '',
       publish_date: new Date().toISOString().split('T')[0],
       expiry_date: '',
       is_published: 1,
@@ -77,6 +98,7 @@ const Noticeboard = () => {
       notice_type: notice.notice_type || 'general',
       type: notice.type || 'global',
       target_role: notice.target_role || '',
+      target_section_id: notice.target_section_id || '',
       publish_date: notice.publish_date ? notice.publish_date.split('T')[0] : new Date().toISOString().split('T')[0],
       expiry_date: notice.expiry_date ? notice.expiry_date.split('T')[0] : '',
       is_published: notice.is_published ? 1 : 0,
@@ -95,6 +117,7 @@ const Noticeboard = () => {
       setModalOpen(false);
     } catch (err) {
       console.error('Failed to save notice:', err);
+      alert(err.response?.data?.message || 'Failed to save notice. Please try again.');
     }
   };
 
@@ -103,6 +126,7 @@ const Noticeboard = () => {
       await togglePublishMutation.mutateAsync({ id: notice.id, is_published: notice.is_published ? 0 : 1 });
     } catch (err) {
       console.error('Failed to toggle publish status:', err);
+      alert(err.response?.data?.message || 'Failed to update publish status. Please try again.');
     }
   };
 
@@ -112,6 +136,7 @@ const Noticeboard = () => {
         await deleteNoticeMutation.mutateAsync(id);
       } catch (err) {
         console.error('Failed to delete notice:', err);
+        alert(err.response?.data?.message || 'Failed to delete notice. Please try again.');
       }
     }
   };
@@ -314,6 +339,24 @@ const Noticeboard = () => {
                 </div>
               </div>
 
+              {formData.type === 'work' && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Target Section (Optional)</label>
+                  <select
+                    value={formData.target_section_id}
+                    onChange={(e) => setFormData({ ...formData, target_section_id: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="">All Sections</option>
+                    {sections.map((sec) => (
+                      <option key={sec.id} value={sec.id}>
+                        {sec.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Target Role (Optional)</label>
@@ -340,6 +383,28 @@ const Noticeboard = () => {
                     <option value={1}>Publish Immediately</option>
                     <option value={0}>Save as Draft</option>
                   </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Publish Date</label>
+                  <input
+                    type="date"
+                    value={formData.publish_date}
+                    onChange={(e) => setFormData({ ...formData, publish_date: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Expiry Date (Optional)</label>
+                  <input
+                    type="date"
+                    value={formData.expiry_date}
+                    onChange={(e) => setFormData({ ...formData, expiry_date: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-indigo-500"
+                  />
                 </div>
               </div>
 

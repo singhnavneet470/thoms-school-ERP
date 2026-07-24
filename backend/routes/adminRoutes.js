@@ -10,10 +10,13 @@ const pool = require('../config/db');
 router.post('/users', [verifyToken, authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN)], async (req, res) => {
     let { email, password, role, class_name, section, full_name, phone, gender, status } = req.body;
     try {
+        if (req.user.role === ROLES.ADMIN && role === ROLES.SUPER_ADMIN) {
+            return res.status(403).json({ success: false, message: 'Admins cannot assign elevated super_admin role' });
+        }
         if (!password && role === 'student') {
             password = '123456';
         } else if (!password) {
-            return res.status(400).json({ error: 'Password is required' });
+            return res.status(400).json({ success: false, message: 'Password is required' });
         }
         const hashedPassword = await bcrypt.hash(password, 8);
         const [result] = await pool.query(
@@ -22,7 +25,7 @@ router.post('/users', [verifyToken, authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN)], 
         );
         res.status(201).json({ success: true, message: 'User created successfully', id: result.insertId });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 
@@ -39,10 +42,25 @@ router.get('/users', [verifyToken, authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN)], a
 // Delete user (Admin and Super Admin)
 router.delete('/users/:id', [verifyToken, authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN)], async (req, res) => {
     try {
-        await pool.query('DELETE FROM users WHERE id = ?', [req.params.id]);
+        const targetUserId = req.params.id;
+        const [[targetUser]] = await pool.query('SELECT id, role FROM users WHERE id = ?', [targetUserId]);
+        if (!targetUser) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        if (req.user.role !== ROLES.SUPER_ADMIN) {
+            if (targetUser.role === ROLES.SUPER_ADMIN) {
+                return res.status(403).json({ success: false, message: 'Only Super Admins can delete Super Admin accounts' });
+            }
+            if (String(req.user.id) === String(targetUserId)) {
+                return res.status(403).json({ success: false, message: 'Admins cannot delete their own account' });
+            }
+        }
+
+        await pool.query('DELETE FROM users WHERE id = ?', [targetUserId]);
         res.status(200).json({ success: true, message: 'User deleted successfully' });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 
@@ -50,6 +68,9 @@ router.delete('/users/:id', [verifyToken, authorize(ROLES.ADMIN, ROLES.SUPER_ADM
 router.put('/users/:id', [verifyToken, authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN)], async (req, res) => {
     const { password, role, class_name, section, email, full_name, phone, gender, status } = req.body;
     try {
+        if (req.user.role === ROLES.ADMIN && role === ROLES.SUPER_ADMIN) {
+            return res.status(403).json({ success: false, message: 'Admins cannot assign elevated super_admin role' });
+        }
         if (password) {
             const hashedPassword = await bcrypt.hash(password, 8);
             await pool.query('UPDATE users SET password = ?, role = ?, class = ?, section = ?, email = ?, full_name = ?, phone = ?, gender = ?, status = ? WHERE id = ?', 
@@ -60,7 +81,7 @@ router.put('/users/:id', [verifyToken, authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN)
         }
         res.status(200).json({ success: true, message: 'User updated successfully' });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 
@@ -90,7 +111,7 @@ router.post('/settings', [verifyToken, isSuperAdmin], async (req, res) => {
         }
         res.status(200).json({ success: true, message: 'Settings updated successfully' });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 
@@ -162,7 +183,7 @@ router.get('/stats', [verifyToken, authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN)], a
             }
         });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 
@@ -178,7 +199,7 @@ router.get('/classes', [verifyToken, authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN)],
         `);
         res.json({ success: true, data: rows });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 
@@ -198,7 +219,7 @@ router.get('/classes/:classId/students', [verifyToken, authorize(ROLES.ADMIN, RO
         `, [classId, classId]);
         res.json({ success: true, data: rows });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 

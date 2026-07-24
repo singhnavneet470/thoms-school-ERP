@@ -46,7 +46,9 @@ const AdminUserManagementView = ({ initialTab = 'all' }) => {
     }
   };
 
-  const displayUsers = Array.isArray(usersResponse) ? usersResponse : (usersResponse?.data || []);
+  const displayUsers = Array.isArray(usersResponse)
+    ? usersResponse
+    : (Array.isArray(usersResponse?.data) ? usersResponse.data : []);
 
   const filteredUsers = displayUsers.filter((u) => {
     const matchesSearch = 

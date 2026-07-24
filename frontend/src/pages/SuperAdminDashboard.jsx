@@ -84,36 +84,16 @@ const SuperAdminDashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [statsRes, noticesRes] = await Promise.all([
+      const [statsRes] = await Promise.all([
         api.get('/admin/stats'),
-        api.get('/notices'),
       ]);
       if (statsRes.data?.data) {
         setStats(statsRes.data.data);
-      }
-      if (noticesRes.data?.data) {
-        setNotices(noticesRes.data.data);
       }
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCreateNotice = async (e) => {
-    e.preventDefault();
-    if (!newNotice.title || !newNotice.content) return;
-    try {
-      setPostingNotice(true);
-      await api.post('/notices', newNotice);
-      setShowNoticeModal(false);
-      setNewNotice({ title: '', content: '', notice_type: 'general', type: 'global', target_role: '' });
-      fetchDashboardData();
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to post notice');
-    } finally {
-      setPostingNotice(false);
     }
   };
 
@@ -134,12 +114,6 @@ const SuperAdminDashboard = () => {
           <p className="text-indigo-200 font-medium text-sm mt-1">Here is live platform status and statistics for Thomson School.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowNoticeModal(true)}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-2xl font-bold text-sm transition-colors shadow-lg flex items-center gap-2 border border-indigo-400/30"
-          >
-            <Bell className="w-4 h-4" /> Post Notice
-          </button>
           <button
             onClick={() => navigate('/admin/users')}
             className="bg-white text-indigo-900 px-5 py-3 rounded-2xl font-bold text-sm hover:bg-indigo-50 transition-colors shadow-lg flex items-center gap-2"
@@ -235,108 +209,6 @@ const SuperAdminDashboard = () => {
           </div>
         </div>
       </div>
-
-      {/* Post Notice Modal */}
-      {showNoticeModal && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white max-w-lg w-full rounded-3xl p-6 shadow-2xl border border-slate-100 space-y-4 animate-in zoom-in-95">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <Megaphone className="w-5 h-5 text-indigo-600" /> Create New Notice
-              </h3>
-              <button onClick={() => setShowNoticeModal(false)} className="p-1 rounded-lg text-slate-400 hover:bg-slate-100">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateNotice} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Notice Title</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Science Exhibition Announcement"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-indigo-500"
-                  value={newNotice.title}
-                  onChange={(e) => setNewNotice({ ...newNotice, title: e.target.value })}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Notice Category</label>
-                  <select
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-indigo-500"
-                    value={newNotice.notice_type}
-                    onChange={(e) => setNewNotice({ ...newNotice, notice_type: e.target.value })}
-                  >
-                    <option value="general">General</option>
-                    <option value="academic">Academic</option>
-                    <option value="fee">Fee</option>
-                    <option value="exam">Exam</option>
-                    <option value="holiday">Holiday</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Notice Type</label>
-                  <select
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-indigo-500"
-                    value={newNotice.type}
-                    onChange={(e) => setNewNotice({ ...newNotice, type: e.target.value })}
-                  >
-                    <option value="global">Global (All Users)</option>
-                    <option value="work">Work / Academic Task</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Target Role (Optional)</label>
-                <select
-                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-indigo-500"
-                  value={newNotice.target_role}
-                  onChange={(e) => setNewNotice({ ...newNotice, target_role: e.target.value })}
-                >
-                  <option value="">All Roles</option>
-                  <option value="student">Student</option>
-                  <option value="teacher">Teacher</option>
-                  <option value="cashier">Cashier</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Notice Content</label>
-                <textarea
-                  required
-                  rows="4"
-                  placeholder="Type the full announcement content here..."
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-indigo-500"
-                  value={newNotice.content}
-                  onChange={(e) => setNewNotice({ ...newNotice, content: e.target.value })}
-                ></textarea>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowNoticeModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={postingNotice}
-                  className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md flex items-center gap-2"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  {postingNotice ? 'Publishing...' : 'Publish Notice'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
