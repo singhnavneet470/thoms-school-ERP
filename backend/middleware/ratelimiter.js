@@ -15,4 +15,22 @@ const paymentOrderLimiter = rateLimit({
   keyGenerator: (req) => req.user?.id?.toString() || req.ip,
 });
 
-module.exports = { loginLimiter, paymentOrderLimiter };
+const changePasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { success: false, message: 'Too many password change attempts. Try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const forgotPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { success: false, message: 'Too many password reset attempts. Try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const passwordResetLimiter = forgotPasswordLimiter;
+
+module.exports = { loginLimiter, paymentOrderLimiter, passwordResetLimiter, changePasswordLimiter, forgotPasswordLimiter };

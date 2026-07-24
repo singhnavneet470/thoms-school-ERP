@@ -14,7 +14,8 @@ import {
   Clock,
   GraduationCap,
   Sparkles,
-  Building2
+  Building2,
+  Megaphone
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import {
@@ -153,19 +154,17 @@ const Layout = () => {
             {/* Admin & Super Admin Exclusive Links */}
             {(isSuperAdmin || isAdmin) && (
               <>
-                {isSuperAdmin && (
-                  <Link to="/dashboard" className={navLinkClass('/dashboard')}>
-                    <LayoutDashboard className="w-4 h-4" /> Super Admin Portal
-                  </Link>
-                )}
                 <Link to="/admin/dashboard" className={navLinkClass('/admin/dashboard')}>
-                  <LayoutDashboard className="w-4 h-4" /> Admin Operations
+                  <LayoutDashboard className="w-4 h-4" /> Administrative Portal
                 </Link>
                 <Link to="/admin/users" className={navLinkClass('/admin/users')}>
                   <Users className="w-4 h-4" /> User Directory
                 </Link>
                 <Link to="/admin/classes" className={navLinkClass('/admin/classes')}>
                   <Building2 className="w-4 h-4" /> Class Directory
+                </Link>
+                <Link to="/admin/notices" className={navLinkClass('/admin/notices')}>
+                  <Megaphone className="w-4 h-4" /> Notice Board
                 </Link>
                 <Link to="/finance/dashboard" className={navLinkClass('/finance/dashboard')}>
                   <CreditCard className="w-4 h-4" /> Fees Desk Overview
