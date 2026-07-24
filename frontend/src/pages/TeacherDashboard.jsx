@@ -94,7 +94,7 @@ const TeacherDashboard = ({ activeTab: initialActiveTab = 'overview' }) => {
 
       // Initialize marks
       const initMarks = {};
-      data.forEach(s => { initMarks[s.id] = s.englishMark || 80; });
+      data.forEach(s => { initMarks[s.id] = (s.englishMark !== undefined && s.englishMark !== null) ? s.englishMark : ''; });
       setMarksData(initMarks);
     } catch (err) {
       console.error('Failed to fetch class students:', err);
