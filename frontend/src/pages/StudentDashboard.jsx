@@ -31,6 +31,7 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
   const [workNotices, setWorkNotices] = useState([]);
   const [timetable, setTimetable] = useState([]);
   const [fees, setFees] = useState([]);
+  const [attendanceSummary, setAttendanceSummary] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Security password state
@@ -46,15 +47,17 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
   const fetchStudentData = async () => {
     try {
       setLoading(true);
-      const [workRes, noticesRes, feeRes] = await Promise.all([
+      const [workRes, noticesRes, feeRes, attRes] = await Promise.all([
         api.get('/homework/student/my-work').catch(() => ({ data: { data: [] } })),
         api.get('/notices/student-work').catch(() => ({ data: { data: [] } })),
         api.get('/payments/records/my-fees').catch(() => ({ data: { data: [] } })),
+        api.get('/attendance/student/my-summary').catch(() => ({ data: { data: null } })),
       ]);
 
       setWorkItems(workRes.data?.data || []);
       setWorkNotices(noticesRes.data?.data || []);
       setFees(feeRes.data?.data || []);
+      setAttendanceSummary(attRes.data?.data || null);
 
       // Fetch parameterless student timetable
       const ttRes = await api.get('/timetable/student/my-timetable').catch(() => ({ data: { data: [] } }));
@@ -173,8 +176,16 @@ const StudentDashboard = ({ activeTab = 'home' }) => {
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Attendance Status</span>
                 <CheckCircle className="w-5 h-5 text-emerald-600" />
               </div>
-              <h3 className="text-2xl font-black text-slate-900">Good Standing</h3>
-              <p className="text-xs text-slate-500 font-medium">Class attendance roll record intact.</p>
+              <h3 className="text-2xl font-black text-slate-900">
+                {attendanceSummary?.total_days > 0
+                  ? `${Math.round((Number(attendanceSummary.present || 0) / Number(attendanceSummary.total_days)) * 100)}% Present`
+                  : '100% Present'}
+              </h3>
+              <p className="text-xs text-slate-500 font-medium">
+                {attendanceSummary?.total_days > 0
+                  ? `${attendanceSummary.present || 0} of ${attendanceSummary.total_days} days attended this month.`
+                  : 'Class attendance roll record intact.'}
+              </p>
             </div>
           </div>
         </div>

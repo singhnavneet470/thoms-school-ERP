@@ -154,13 +154,8 @@ const Layout = () => {
             {/* Admin & Super Admin Exclusive Links */}
             {(isSuperAdmin || isAdmin) && (
               <>
-                {isSuperAdmin && (
-                  <Link to="/dashboard" className={navLinkClass('/dashboard')}>
-                    <LayoutDashboard className="w-4 h-4" /> Super Admin Portal
-                  </Link>
-                )}
                 <Link to="/admin/dashboard" className={navLinkClass('/admin/dashboard')}>
-                  <LayoutDashboard className="w-4 h-4" /> Admin Operations
+                  <LayoutDashboard className="w-4 h-4" /> Administrative Portal
                 </Link>
                 <Link to="/admin/users" className={navLinkClass('/admin/users')}>
                   <Users className="w-4 h-4" /> User Directory
